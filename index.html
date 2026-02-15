@@ -10,7 +10,7 @@
         :root {
             --brand-blue: #0146bc;
             --brand-yellow: #eddc01;
-            --bg-color: #f5f5f7; /* Grigio chiarissimo stile Apple */
+            --bg-color: #f5f5f7;
             --surface-color: #ffffff;
             --text-main: #1d1d1f;
             --text-muted: #86868b;
@@ -20,11 +20,7 @@
             --spacing: 24px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -34,7 +30,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Header e Navigazione */
         header {
             background-color: var(--brand-blue);
             color: #ffffff;
@@ -45,16 +40,9 @@
             border-bottom: 4px solid var(--brand-yellow);
         }
 
-        header h2 {
-            font-weight: 600;
-            font-size: 1.25rem;
-            letter-spacing: -0.5px;
-        }
+        header h2 { font-weight: 600; font-size: 1.25rem; }
 
-        nav {
-            display: flex;
-            gap: 0.5rem;
-        }
+        nav { display: flex; gap: 0.5rem; }
 
         nav button {
             background-color: transparent;
@@ -65,7 +53,7 @@
             font-size: 0.9rem;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
+            transition: all 0.2s;
         }
 
         nav button:hover, nav button.active-nav {
@@ -73,14 +61,8 @@
             border-color: rgba(255, 255, 255, 0.3);
         }
 
-        /* Contenitore Principale */
-        main {
-            padding: var(--spacing);
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        main { padding: var(--spacing); max-width: 1200px; margin: 0 auto; }
 
-        /* Sezioni Boxate (Flat Design) */
         .box {
             background-color: var(--surface-color);
             border: 1px solid var(--border-color);
@@ -95,18 +77,10 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .box-header h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
+        .box-header h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .box-header p { color: var(--text-muted); font-size: 0.9rem; }
 
-        .box-header p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        /* Bottoni (Flat Design con feedback) */
+        /* Bottoni */
         .btn {
             background-color: var(--brand-blue);
             color: #ffffff;
@@ -116,44 +90,19 @@
             font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s, opacity 0.2s;
+            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
 
-        .btn:hover {
-            background-color: #013a9b; /* Tonalità leggermente più scura */
-        }
-
-        .btn:active {
-            opacity: 0.8;
-        }
-
-        .btn:disabled {
-            background-color: var(--border-color);
-            color: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        .btn-yellow {
-            background-color: var(--brand-yellow);
-            color: var(--text-main);
-        }
-
-        .btn-yellow:hover {
-            background-color: #d6c600;
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: var(--brand-blue);
-            border: 1px solid var(--brand-blue);
-        }
-
-        .btn-outline:hover {
-            background-color: rgba(1, 70, 188, 0.05);
-        }
+        .btn:hover { background-color: #013a9b; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
+        .btn-yellow { background-color: var(--brand-yellow); color: var(--text-main); }
+        .btn-yellow:hover { background-color: #d6c600; }
+        .btn-outline { background-color: transparent; color: var(--brand-blue); border: 1px solid var(--brand-blue); }
+        .btn-outline:hover { background-color: rgba(1, 70, 188, 0.05); }
 
         /* Form e Input */
         .form-grid {
@@ -164,60 +113,50 @@
         }
 
         .input-group label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-            color: var(--text-main);
+            display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-main);
         }
 
-        input[type="text"],
-        input[type="number"],
-        input[type="date"] {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: border-color 0.2s;
-            background-color: var(--bg-color);
+        input[type="text"], input[type="number"], input[type="date"] {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color);
+            border-radius: 6px; font-size: 1rem; font-family: inherit;
+            background-color: var(--bg-color); transition: border-color 0.2s;
         }
 
-        input:focus {
-            outline: none;
-            border-color: var(--brand-blue);
-            background-color: var(--surface-color);
+        input:focus { outline: none; border-color: var(--brand-blue); background-color: var(--surface-color); }
+
+        /* Segmented Control per scelta contratto */
+        .segmented-control {
+            display: flex; background-color: var(--bg-color); border-radius: 8px;
+            padding: 4px; margin-bottom: 2rem; border: 1px solid var(--border-color);
+        }
+        
+        .segmented-control button {
+            flex: 1; padding: 0.5rem 1rem; border: none; background: transparent;
+            font-weight: 600; color: var(--text-muted); border-radius: 6px; cursor: pointer;
+            transition: all 0.2s; font-size: 0.9rem;
         }
 
-        /* Viste (Nascondi/Mostra) */
+        .segmented-control button.active-segment {
+            background-color: var(--surface-color); color: var(--brand-blue);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Viste */
         .view-section { display: none; }
         .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+        .contract-form { display: none; }
+        .contract-form.active { display: block; animation: fadeIn 0.3s ease; }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Utility per il layout del budget */
         .budget-row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 0.75rem;
-            align-items: center;
-            background: var(--bg-color);
-            padding: 0.75rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
+            display: flex; gap: 1rem; margin-bottom: 0.75rem; align-items: center;
+            background: var(--bg-color); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color);
         }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
+        .status-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -232,193 +171,233 @@
     </header>
 
     <main>
-        <div class="box" style="display: flex; gap: 1rem; align-items: center; padding: 1rem var(--spacing);">
-            <span style="font-weight: 600; margin-right: auto;">Dati Locali:</span>
-            <button class="btn btn-outline" onclick="handleExport(this)">Esporta JSON</button>
-            <label class="btn btn-outline" for="import-file" style="cursor:pointer; margin:0;">Importa JSON</label>
-            <input type="file" id="import-file" accept=".json" onchange="handleImport(event)" style="display:none;">
-        </div>
-
-        <section id="dashboard" class="view-section active box">
-            <div class="box-header">
-                <h3>Dashboard Riepilogativa</h3>
-                <p>Panoramica degli investimenti per esercizio e funzione.</p>
-            </div>
-            <p style="color: var(--text-muted);">[Grafici e KPI verranno inseriti qui]</p>
-        </section>
-
-        <section id="contratti" class="view-section">
+        <section id="contratti" class="view-section active">
             
             <div class="box">
                 <div class="box-header">
-                    <h3>Nuovo Contratto Quadro</h3>
-                    <p>Inserisci i dati generali e ripartisci il budget sulle funzioni e sulle annualità.</p>
+                    <h3>Inserimento Nuovo Contratto</h3>
+                    <p>Seleziona la tipologia di contratto per mostrare i campi corretti.</p>
+                </div>
+
+                <div class="segmented-control" id="contract-selector">
+                    <button class="active-segment" onclick="switchContractType('form-quadro', this)">Contratto Quadro</button>
+                    <button onclick="switchContractType('form-diretta', this)">Assegnazione Diretta</button>
+                    <button onclick="switchContractType('form-terzi', this)">Terze Funzioni</button>
                 </div>
                 
-                <div class="form-grid">
-                    <div class="input-group">
-                        <label>Fornitore</label>
-                        <input type="text" id="cq-fornitore" placeholder="Ragione sociale">
+                <div id="form-quadro" class="contract-form active">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Fornitore</label><input type="text" id="cq-fornitore"></div>
+                        <div class="input-group"><label>Numero Identificativo</label><input type="text" id="cq-numero"></div>
+                        <div class="input-group"><label>Data Inizio</label><input type="date" id="cq-inizio"></div>
+                        <div class="input-group"><label>Data Fine</label><input type="date" id="cq-fine"></div>
+                        <div class="input-group"><label>Valore Complessivo (Netto €)</label><input type="number" id="cq-valore" oninput="calcolaQuadratura()"></div>
                     </div>
-                    <div class="input-group">
-                        <label>Numero Identificativo</label>
-                        <input type="text" id="cq-numero" placeholder="Es. CQ-2026-001">
-                    </div>
-                    <div class="input-group">
-                        <label>Data Inizio</label>
-                        <input type="date" id="cq-inizio">
-                    </div>
-                    <div class="input-group">
-                        <label>Data Fine (Iniziale)</label>
-                        <input type="date" id="cq-fine">
-                    </div>
-                    <div class="input-group">
-                        <label>Valore Complessivo (Netto €)</label>
-                        <input type="number" id="cq-valore" oninput="calcolaQuadratura()" placeholder="0.00">
+
+                    <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4>Ripartizione Budget</h4>
+                            <span id="cq-status-quadratura" class="status-badge" style="background: #ffebeb; color: #d93025;">Da quadrare</span>
+                        </div>
+                        <div id="container-ripartizioni"></div>
+                        <button class="btn btn-outline" style="margin-top: 1rem;" onclick="aggiungiRigaBudget()">+ Aggiungi Quota</button>
                     </div>
                 </div>
 
-                <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h4 style="font-size: 1.1rem;">Ripartizione Budget</h4>
-                        <span id="cq-status-quadratura" class="status-badge" style="background: #ffebeb; color: #d93025;">Da quadrare</span>
+                <div id="form-diretta" class="contract-form">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Fornitore</label><input type="text" id="cd-fornitore"></div>
+                        <div class="input-group"><label>Numero Identificativo</label><input type="text" id="cd-numero"></div>
+                        <div class="input-group"><label>Data Inizio</label><input type="date" id="cd-inizio"></div>
+                        <div class="input-group"><label>Data Fine</label><input type="date" id="cd-fine"></div>
+                        <div class="input-group"><label>Valore Complessivo (Netto €)</label><input type="number" id="cd-valore"></div>
                     </div>
-                    
-                    <div id="container-ripartizioni">
-                        </div>
-                    
-                    <button class="btn btn-outline" style="margin-top: 1rem;" onclick="aggiungiRigaBudget()">+ Aggiungi Quota</button>
+                    <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">* Il budget è interamente assegnato alla Funzione Principale. La ripartizione annuale avverrà tramite i VAP.</p>
+                </div>
+
+                <div id="form-terzi" class="contract-form">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Fornitore</label><input type="text" id="ct-fornitore"></div>
+                        <div class="input-group"><label>Funzione Gestore</label><input type="text" id="ct-funzione" placeholder="Es. Acquisti, HR..."></div>
+                        <div class="input-group"><label>Data Inizio</label><input type="date" id="ct-inizio"></div>
+                        <div class="input-group"><label>Data Fine</label><input type="date" id="ct-fine"></div>
+                        <div class="input-group"><label>Valore Imputato (Netto €)</label><input type="number" id="ct-valore"></div>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">* L'anno di competenza di default coinciderà con l'anno della Data Inizio.</p>
                 </div>
 
                 <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn btn-outline" onclick="pulisciForm()">Annulla</button>
-                    <button class="btn btn-yellow" id="btn-salva-cq" disabled onclick="salvaContratto(this)">Salva Contratto</button>
+                    <button class="btn btn-outline" onclick="pulisciForm()">Annulla / Pulisci</button>
+                    <button class="btn btn-yellow" id="btn-salva-contratto" onclick="salvaContrattoAttivo(this)">Salva Contratto</button>
                 </div>
             </div>
         </section>
 
-        <section id="impostazioni" class="view-section box">
-            <div class="box-header">
-                <h3>Impostazioni Sistema</h3>
-                <p>Configura i parametri base della tua area.</p>
-            </div>
-            <div class="input-group" style="max-width: 300px;">
-                <label>Nome Funzione Principale</label>
-                <input type="text" value="La Mia Funzione">
-            </div>
-            <button class="btn" style="margin-top: 1rem;" onclick="withFeedback(this, 'Salvataggio...', 'Salvato!', 'Salva Impostazioni')">Salva Impostazioni</button>
-        </section>
-
+        <section id="dashboard" class="view-section box"><h3>Dashboard</h3><p>Area in costruzione.</p></section>
+        <section id="impostazioni" class="view-section box"><h3>Impostazioni</h3><p>Area in costruzione.</p></section>
     </main>
 
     <script>
-        /* --- LOGICA DATI E UI --- */
+        /* --- MOTORE DATI E LOGICA --- */
+        const DB_KEY = "contratti_db_v1";
         let appData = { contratti: [], ordini: [], vap: [] };
+        let tipoContrattoAttivo = 'quadro'; // Default
 
-        // Animazione Testuale Bottoni (Feedback contestuale)
+        // Inizializzazione
+        window.onload = () => {
+            const savedData = localStorage.getItem(DB_KEY);
+            if(savedData) appData = JSON.parse(savedData);
+            aggiungiRigaBudget(); // Inizializza riga per il contratto quadro
+            calcolaQuadratura();
+        };
+
+        function salvaDati() {
+            localStorage.setItem(DB_KEY, JSON.stringify(appData));
+        }
+
+        // Animazione Testuale Bottoni
         function withFeedback(btn, loadingText, successText, originalText, callback) {
             btn.disabled = true;
             btn.textContent = loadingText;
-            
-            // Simula un'operazione o esegue il callback reale
             setTimeout(() => {
-                if(callback) callback();
+                callback();
                 btn.textContent = successText;
-                btn.style.backgroundColor = "#28a745"; // Verde successo temporaneo
-                btn.style.color = "#fff";
-                
+                btn.style.backgroundColor = "#28a745"; btn.style.color = "#fff";
                 setTimeout(() => {
                     btn.disabled = false;
                     btn.textContent = originalText;
-                    btn.style.backgroundColor = ""; // Ripristina CSS
-                    btn.style.color = "";
+                    btn.style.backgroundColor = ""; btn.style.color = "";
                 }, 2000);
             }, 600);
         }
 
-        // Navigazione
+        // Switch Navigazione
         function switchView(viewId, btnElement) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
+            btnElement.classList.add('active-nav');
+        }
+
+        // Switch Form Contratti (Segmented Control)
+        function switchContractType(formId, btnElement) {
+            document.querySelectorAll('.contract-form').forEach(el => el.classList.remove('active'));
+            document.getElementById(formId).classList.add('active');
             
-            if(btnElement) {
-                document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
-                btnElement.classList.add('active-nav');
+            document.querySelectorAll('.segmented-control button').forEach(btn => btn.classList.remove('active-segment'));
+            btnElement.classList.add('active-segment');
+            
+            // Aggiorna lo stato della variabile attiva per il salvataggio
+            if(formId === 'form-quadro') tipoContrattoAttivo = 'quadro';
+            if(formId === 'form-diretta') tipoContrattoAttivo = 'diretta';
+            if(formId === 'form-terzi') tipoContrattoAttivo = 'terzi';
+
+            // Gestione bottone Salva in base alla quadratura (solo per quadro)
+            const btnSalva = document.getElementById('btn-salva-contratto');
+            if(tipoContrattoAttivo === 'quadro') {
+                calcolaQuadratura(); // Disabilita se non quadrato
+            } else {
+                btnSalva.disabled = false; // Sempre abilitato per gli altri
             }
         }
 
-        // Funzioni Mock per Import/Export con feedback
-        function handleExport(btn) {
-            withFeedback(btn, "Preparazione file...", "File Scaricato!", "Esporta JSON", () => {
-                // Qui andrà la logica reale di export vista prima
-                console.log("Export eseguito");
-            });
-        }
-
-        function handleImport(event) {
-            // Simulazione import
-            alert("File selezionato. Inseriremo qui la logica di lettura JSON.");
-        }
-
-        /* --- LOGICA BUDGET CONTRATTO QUADRO --- */
+        /* --- LOGICA BUDGET (Solo Contratto Quadro) --- */
         function aggiungiRigaBudget() {
             const container = document.getElementById('container-ripartizioni');
-            const id = Date.now();
             const riga = document.createElement('div');
             riga.className = 'budget-row';
             riga.innerHTML = `
-                <input type="text" placeholder="Funzione (es. IT)" style="flex: 2;">
-                <input type="number" placeholder="Anno" style="flex: 1;">
-                <input type="number" placeholder="Importo €" class="input-importo" oninput="calcolaQuadratura()" style="flex: 2;">
-                <button onclick="this.parentElement.remove(); calcolaQuadratura()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted); padding:0 0.5rem;" title="Rimuovi riga">✕</button>
+                <input type="text" placeholder="Funzione (es. IT)" class="b-funzione" style="flex: 2;">
+                <input type="number" placeholder="Anno (es. 2026)" class="b-anno" style="flex: 1;">
+                <input type="number" placeholder="Importo €" class="b-importo" oninput="calcolaQuadratura()" style="flex: 2;">
+                <button onclick="this.parentElement.remove(); calcolaQuadratura()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted);">✕</button>
             `;
             container.appendChild(riga);
         }
 
         function calcolaQuadratura() {
-            const totaleInput = document.getElementById('cq-valore').value;
-            const totale = parseFloat(totaleInput) || 0;
+            if(tipoContrattoAttivo !== 'quadro') return;
+
+            const totale = parseFloat(document.getElementById('cq-valore').value) || 0;
             let somma = 0;
-            
-            document.querySelectorAll('.input-importo').forEach(input => {
-                somma += parseFloat(input.value) || 0;
-            });
+            document.querySelectorAll('.b-importo').forEach(input => somma += parseFloat(input.value) || 0);
 
             const diff = Math.abs(totale - somma);
             const badge = document.getElementById('cq-status-quadratura');
-            const btnSalva = document.getElementById('btn-salva-cq');
+            const btnSalva = document.getElementById('btn-salva-contratto');
 
             if (totale > 0 && diff < 0.01) {
                 badge.textContent = "Budget Quadrato";
-                badge.style.background = "#e6f4ea"; // Verde chiaro
-                badge.style.color = "#137333";
+                badge.style.background = "#e6f4ea"; badge.style.color = "#137333";
                 btnSalva.disabled = false;
             } else {
                 badge.textContent = `Scostamento: ${(totale - somma).toFixed(2)} €`;
-                badge.style.background = "#ffebeb"; // Rosso chiaro
-                badge.style.color = "#d93025";
+                badge.style.background = "#ffebeb"; badge.style.color = "#d93025";
                 btnSalva.disabled = true;
             }
         }
 
-        function salvaContratto(btn) {
-            withFeedback(btn, "Salvataggio...", "Contratto Creato!", "Salva Contratto", () => {
-                // Logica di push in appData.contratti e salvataggio LocalStorage
-                console.log("Contratto salvato");
-                setTimeout(pulisciForm, 2000);
+        /* --- SALVATAGGIO DATI (Estrazione dai Form) --- */
+        function salvaContrattoAttivo(btn) {
+            withFeedback(btn, "Salvataggio...", "Contratto Salvato!", "Salva Contratto", () => {
+                
+                let nuovoContratto = {
+                    id: "CTR-" + Date.now(), // Genera un ID univoco
+                    tipo: tipoContrattoAttivo,
+                    proroghe: [], // Predisposizione per la tua richiesta sulle proroghe
+                    dataCreazione: new Date().toISOString()
+                };
+
+                // Estrazione dati in base al form attivo
+                if (tipoContrattoAttivo === 'quadro') {
+                    nuovoContratto.fornitore = document.getElementById('cq-fornitore').value;
+                    nuovoContratto.numero = document.getElementById('cq-numero').value;
+                    nuovoContratto.dataInizio = document.getElementById('cq-inizio').value;
+                    nuovoContratto.dataFine = document.getElementById('cq-fine').value;
+                    nuovoContratto.valore = parseFloat(document.getElementById('cq-valore').value) || 0;
+                    
+                    // Estrae array ripartizioni
+                    nuovoContratto.ripartizioni = [];
+                    document.querySelectorAll('.budget-row').forEach(row => {
+                        nuovoContratto.ripartizioni.push({
+                            funzione: row.querySelector('.b-funzione').value,
+                            anno: parseInt(row.querySelector('.b-anno').value) || 0,
+                            importo: parseFloat(row.querySelector('.b-importo').value) || 0
+                        });
+                    });
+
+                } else if (tipoContrattoAttivo === 'diretta') {
+                    nuovoContratto.fornitore = document.getElementById('cd-fornitore').value;
+                    nuovoContratto.numero = document.getElementById('cd-numero').value;
+                    nuovoContratto.dataInizio = document.getElementById('cd-inizio').value;
+                    nuovoContratto.dataFine = document.getElementById('cd-fine').value;
+                    nuovoContratto.valore = parseFloat(document.getElementById('cd-valore').value) || 0;
+
+                } else if (tipoContrattoAttivo === 'terzi') {
+                    nuovoContratto.fornitore = document.getElementById('ct-fornitore').value;
+                    nuovoContratto.funzioneGestore = document.getElementById('ct-funzione').value;
+                    nuovoContratto.dataInizio = document.getElementById('ct-inizio').value;
+                    nuovoContratto.dataFine = document.getElementById('ct-fine').value;
+                    nuovoContratto.valore = parseFloat(document.getElementById('ct-valore').value) || 0;
+                }
+
+                // Salva nel database logico e fisico
+                appData.contratti.push(nuovoContratto);
+                salvaDati();
+                
+                // Console log per permetterti di vedere i dati salvati ispezionando il browser
+                console.log("Database Aggiornato:", appData);
+                
+                setTimeout(pulisciForm, 1000);
             });
         }
 
         function pulisciForm() {
-            document.querySelectorAll('#contratti input').forEach(input => input.value = '');
+            document.querySelectorAll('input').forEach(input => input.value = '');
             document.getElementById('container-ripartizioni').innerHTML = '';
+            aggiungiRigaBudget();
             calcolaQuadratura();
         }
-
-        // Inizializza una riga vuota all'avvio
-        window.onload = () => {
-            aggiungiRigaBudget();
-        };
     </script>
 </body>
 </html>

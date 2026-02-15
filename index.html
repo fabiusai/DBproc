@@ -113,12 +113,42 @@
 
     <main>
         <section id="dashboard" class="view-section active">
-            <div class="box">
-                <div class="box-header">
-                    <div><h3>Archivio Contratti</h3><p>Visualizza, cerca e gestisci i contratti.</p></div>
-                    <input type="text" id="search-contratti" class="search-bar" placeholder="🔍 Cerca fornitore o numero..." oninput="renderDashboard()">
+            <div class="segmented-control" style="margin-bottom: 1.5rem;">
+                <button class="active-segment" id="tab-archivio" onclick="switchDashboardTab('archivio')">Archivio Completo</button>
+                <button id="tab-attivi" onclick="switchDashboardTab('attivi')">Contratti Attivi</button>
+                <button id="tab-budget" onclick="switchDashboardTab('budget')">Budget Annuale</button>
+            </div>
+
+            <div id="dash-archivio" class="dash-tab-content">
+                <div class="box">
+                    <div class="box-header">
+                        <div><h3>Archivio Contratti</h3><p>Visualizza e gestisci tutti i contratti in database.</p></div>
+                        <input type="text" id="search-contratti" class="search-bar" placeholder="🔍 Cerca fornitore o numero..." oninput="renderDashboard()">
+                    </div>
+                    <div id="lista-contratti-container"></div>
                 </div>
-                <div id="lista-contratti-container"></div>
+            </div>
+
+            <div id="dash-attivi" class="dash-tab-content" style="display:none;">
+                <div class="box">
+                    <div class="box-header">
+                        <div><h3>Contratti Attivi</h3><p>Elenco basato sulla data di scadenza odierna.</p></div>
+                    </div>
+                    <div id="lista-contratti-attivi"></div>
+                </div>
+            </div>
+
+            <div id="dash-budget" class="dash-tab-content" style="display:none;">
+                <div class="box">
+                    <div class="box-header">
+                        <div><h3>Analisi Budget Annuale</h3><p>Dettaglio spese della mia struttura per anno di esercizio.</p></div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <label>Anno:</label>
+                            <input type="number" id="budget-anno-filter" value="2026" style="width:80px;" onchange="renderBudgetAnnuale()">
+                        </div>
+                    </div>
+                    <div id="report-budget-container"></div>
+                </div>
             </div>
         </section>
 
@@ -383,7 +413,96 @@
                 document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
                 btnElement.classList.add('active-nav');
             }
-            if(viewId === 'dashboard') renderDashboard();
+            if(viewId === 'dashboard') {
+                switchDashboardTab('archivio');
+                renderDashboard();
+            }
+        }
+
+        function switchDashboardTab(tab) {
+            document.querySelectorAll('.dash-tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.segmented-control button').forEach(b => b.classList.remove('active-segment'));
+            
+            if(tab === 'archivio') {
+                document.getElementById('dash-archivio').style.display = 'block';
+                document.getElementById('tab-archivio').classList.add('active-segment');
+                renderDashboard();
+            } else if(tab === 'attivi') {
+                document.getElementById('dash-attivi').style.display = 'block';
+                document.getElementById('tab-attivi').classList.add('active-segment');
+                renderContrattiAttivi();
+            } else if(tab === 'budget') {
+                document.getElementById('dash-budget').style.display = 'block';
+                document.getElementById('tab-budget').classList.add('active-segment');
+                renderBudgetAnnuale();
+            }
+        }
+
+        function renderContrattiAttivi() {
+            const container = document.getElementById('lista-contratti-attivi');
+            const oggi = new Date().toISOString().split('T')[0];
+            const attivi = appData.contratti.filter(c => c.dataFine >= oggi);
+            
+            if(attivi.length === 0) { container.innerHTML = '<div class="empty-state">Nessun contratto attivo alla data odierna.</div>'; return; }
+            
+            let html = '<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">';
+            html += '<tr style="text-align:left; border-bottom:2px solid var(--border-color);"><th style="padding:10px;">Fornitore</th><th>Scadenza</th><th>Valore Totale</th><th>Speso (VAP)</th><th>Residuo</th></tr>';
+            
+            attivi.forEach(c => {
+                const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
+                const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
+                html += `<tr style="border-bottom:1px solid var(--border-color);">
+                    <td style="padding:10px;"><strong>${c.fornitore}</strong><br><small>${c.numero}</small></td>
+                    <td>${formattatoreDataIT(c.dataFine)}</td>
+                    <td>${formattatoreValuta(c.valore)}</td>
+                    <td style="color:var(--brand-blue);">${formattatoreValuta(speso)}</td>
+                    <td style="font-weight:600;">${formattatoreValuta(c.valore - speso)}</td>
+                </tr>`;
+            });
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        function renderBudgetAnnuale() {
+            const container = document.getElementById('report-budget-container');
+            const annoRicerca = document.getElementById('budget-anno-filter').value;
+            const miaFunzione = appData.config.miaFunzione;
+
+            // Filtra VAP per anno e funzione primaria
+            const vapsStruttura = appData.vap.filter(v => v.anno == annoRicerca && v.funzione === miaFunzione);
+            
+            if(vapsStruttura.length === 0) { container.innerHTML = `<div class="empty-state">Nessuna spesa registrata per la struttura ${miaFunzione} nell'anno ${annoRicerca}.</div>`; return; }
+
+            const raggruppato = {};
+            let totaleGenerale = 0;
+
+            vapsStruttura.forEach(v => {
+                const ordine = appData.ordini.find(o => o.id === v.idOrdine);
+                const contratto = appData.contratti.find(c => c.id === (ordine ? ordine.idContratto : ''));
+                const fornitore = contratto ? contratto.fornitore : 'N/D';
+                
+                if(!raggruppato[fornitore]) raggruppato[fornitore] = 0;
+                raggruppato[fornitore] += v.valore;
+                totaleGenerale += v.valore;
+            });
+
+            let html = `<div style="background:var(--bg-color); padding:1.5rem; border-radius:8px; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center;">
+                <h4 style="color:var(--text-muted);">Totale Speso ${annoRicerca}:</h4>
+                <span style="font-size:1.8rem; font-weight:700; color:var(--brand-blue);">${formattatoreValuta(totaleGenerale)}</span>
+            </div>`;
+
+            html += '<h5 style="margin-bottom:1rem; text-transform:uppercase; font-size:0.8rem;">Dettaglio per Fornitore</h5>';
+            for (const [fornitore, totale] of Object.entries(raggruppato)) {
+                const percent = ((totale / totaleGenerale) * 100).toFixed(1);
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; border-bottom:1px solid var(--border-color);">
+                    <span>${fornitore}</span>
+                    <div style="text-align:right;">
+                        <span style="font-weight:600;">${formattatoreValuta(totale)}</span>
+                        <small style="display:block; color:var(--text-muted); font-size:0.7rem;">${percent}% del totale struttura</small>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
         }
 
         function switchContractType(formId, btnElement) {

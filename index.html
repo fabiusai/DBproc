@@ -655,7 +655,52 @@
             contrattoInGestioneId = id; const ctr = appData.contratti.find(c => c.id === id); if(!ctr) return;
             let label = ctr.tipo === 'quadro' ? 'Contratto Quadro' : (ctr.tipo === 'diretta' ? 'Assegnazione Diretta' : 'Terze Funzioni');
             
-            document.getElementById('spese-header').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span><h3 style="margin-top:0.5rem;">${ctr.fornitore || 'Bozza'}</h3><p><strong>N°:</strong> ${ctr.numero || 'N/D'} | <strong>Validità:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)}</p></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><div style="text-align:right;"><span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p style="margin:0;">Budget Totale</p></div><button class="btn btn-yellow btn-small" onclick="esportaPdfContratto('${ctr.id}')">📄 Esporta PDF</button></div></div>${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
+            let statsHtml = '';
+            if (ctr.tipo === 'quadro') {
+                const ordiniCtr = appData.ordini.filter(o => o.idContratto === ctr.id);
+                const impegnatoRda = ordiniCtr.reduce((sum, o) => sum + o.valore, 0);
+                const vapsCtr = appData.vap.filter(v => ordiniCtr.some(o => o.id === v.idOrdine));
+                const pagatoVap = vapsCtr.reduce((sum, v) => sum + v.valore, 0);
+                
+                // Raggruppamento statistiche per funzione
+                let statsFunzioni = {};
+                ordiniCtr.forEach(o => {
+                    const f = o.funzione || 'N/D';
+                    if (!statsFunzioni[f]) statsFunzioni[f] = { rda: 0, vap: 0 };
+                    statsFunzioni[f].rda += o.valore;
+                });
+                vapsCtr.forEach(v => {
+                    const f = v.funzione || 'N/D';
+                    if (!statsFunzioni[f]) statsFunzioni[f] = { rda: 0, vap: 0 };
+                    statsFunzioni[f].vap += v.valore;
+                });
+
+                let htmlFunzioni = Object.keys(statsFunzioni).map(f => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(0,0,0,0.15); border-radius: 4px; margin-bottom: 0.25rem;">
+                        <strong style="color: #fff;">${f}</strong>
+                        <div style="text-align: right; font-size: 0.85rem;">
+                            <span style="margin-right: 15px;">Impegnato RDA: <span style="font-weight: 600;">${formattatoreValuta(statsFunzioni[f].rda)}</span></span>
+                            <span>Speso VAP: <span style="font-weight: 600; color: var(--brand-yellow);">${formattatoreValuta(statsFunzioni[f].vap)}</span></span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                statsHtml = `
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 6px; margin-top: 1rem; font-size: 0.95rem;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 2.5rem; margin-bottom: 1rem;">
+                        <div><span style="display:block; font-size:0.8rem; text-transform:uppercase; opacity:0.8;">Budget Totale</span><strong>${formattatoreValuta(ctr.valore)}</strong></div>
+                        <div><span style="display:block; font-size:0.8rem; text-transform:uppercase; opacity:0.8;">Impegnato (RDA)</span><strong>${formattatoreValuta(impegnatoRda)}</strong> <br><small style="color:var(--brand-yellow);">Residuo RDA: ${formattatoreValuta(ctr.valore - impegnatoRda)}</small></div>
+                        <div><span style="display:block; font-size:0.8rem; text-transform:uppercase; opacity:0.8;">Pagato Effettivo (VAP)</span><strong>${formattatoreValuta(pagatoVap)}</strong> <br><small style="color:var(--brand-yellow);">Residuo VAP: ${formattatoreValuta(ctr.valore - pagatoVap)}</small></div>
+                    </div>
+                    ${Object.keys(statsFunzioni).length > 0 ? `
+                    <div style="border-top: 1px dashed rgba(255,255,255,0.3); padding-top: 0.75rem;">
+                        <span style="display:block; font-size:0.8rem; text-transform:uppercase; opacity:0.8; margin-bottom: 0.5rem;">Dettaglio Quote per Funzione</span>
+                        ${htmlFunzioni}
+                    </div>` : ''}
+                </div>`;
+            }
+
+            document.getElementById('spese-header').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span><h3 style="margin-top:0.5rem;">${ctr.fornitore || 'Bozza'}</h3><p><strong>N°:</strong> ${ctr.numero || 'N/D'} | <strong>Validità:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)}</p></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><div style="text-align:right;"><span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p style="margin:0;">Budget Totale</p></div><button class="btn btn-yellow btn-small" onclick="esportaPdfContratto('${ctr.id}')">📄 Esporta PDF</button></div></div>${statsHtml}${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
             
             const content = document.getElementById('spese-content');
             if (ctr.tipo === 'terzi') { content.innerHTML = `<div class="empty-state"><h4>Nessuna RDA necessaria</h4><p>Contratto gestito da ${ctr.funzioneGestore}.</p></div>`; } 

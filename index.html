@@ -567,12 +567,13 @@
 
                 const card = document.createElement('div'); card.className = 'ordine-card';
                 card.innerHTML = `
-                    <div class="ordine-header">
-                        <div>
+                    <div class="ordine-header" style="cursor:pointer;" onclick="const body = this.nextElementSibling; body.style.display = body.style.display === 'none' ? 'block' : 'none';">
+                        <div onclick="event.stopPropagation();">
                             <h4 style="margin-bottom:0.2rem; display:flex; align-items:center;">
                                 <button class="btn-icon" onclick="caricaRdaPerModifica('${o.id}')" title="Modifica RDA">✏️</button>
                                 <button class="btn-icon btn-icon-danger" onclick="eliminaRda('${o.id}')" title="Elimina RDA">🗑️</button>
                                 ${isMia ? `RDA: ${o.rdaNum||'-'} (ODA: ${o.odaNum||'-'})` : `Computo RDA ${o.funzione}`}
+                                <span style="margin-left:10px; font-size:0.7rem; color:var(--brand-blue);">▼</span>
                             </h4>
                             <span style="font-size:0.85rem; color:var(--text-muted); margin-left: 4rem;">
                                 ${isMia ? `Data: ${formattatoreDataIT(o.rdaData)} | ODA: ${formattatoreDataIT(o.odaData)}` : `Data: ${formattatoreDataIT(o.dataSemplice)} | Anno: ${o.anno}`}
@@ -583,7 +584,7 @@
                             <span style="display:block; font-size:0.85rem; color:${residuo < 0 ? 'red' : 'green'};">Da liquidare: ${formattatoreValuta(residuo)}</span>
                         </div>
                     </div>
-                    <div class="ordine-body">
+                    <div class="ordine-body" style="display:none; border-top: 1px solid var(--border-color);">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
                             <h5 style="color:var(--text-muted); text-transform:uppercase; font-size:0.8rem;">Elenco Pagamenti (VAP)</h5>
                             <button class="btn btn-outline btn-small" onclick="predisponiVapNuovo('${o.id}', '${o.rdaNum||o.funzione}', '${tipoContratto}')">+ Aggiungi VAP</button>

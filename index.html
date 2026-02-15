@@ -6,99 +6,32 @@
     <title>Gestione Contratti | Dashboard</title>
     <link rel="icon" href="favicon.ico">
     <style>
-        /* --- CSS: STILE MINIMALISTA E COLORI ISTITUZIONALI --- */
+        /* --- CSS BASE E VARIABILI --- */
         :root {
-            --brand-blue: #0146bc;
-            --brand-yellow: #eddc01;
-            --bg-color: #f5f5f7;
-            --surface-color: #ffffff;
-            --text-main: #1d1d1f;
-            --text-muted: #86868b;
-            --border-color: #d2d2d7;
-            --radius-box: 12px;
-            --radius-btn: 8px;
-            --spacing: 24px;
+            --brand-blue: #0146bc; --brand-yellow: #eddc01; --bg-color: #f5f5f7;
+            --surface-color: #ffffff; --text-main: #1d1d1f; --text-muted: #86868b;
+            --border-color: #d2d2d7; --radius-box: 12px; --radius-btn: 8px; --spacing: 24px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); line-height: 1.5; -webkit-font-smoothing: antialiased; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        header {
-            background-color: var(--brand-blue);
-            color: #ffffff;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 4px solid var(--brand-yellow);
-        }
-
+        /* --- HEADER E NAVIGAZIONE --- */
+        header { background-color: var(--brand-blue); color: #ffffff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--brand-yellow); }
         header h2 { font-weight: 600; font-size: 1.25rem; }
-
         nav { display: flex; gap: 0.5rem; }
-
-        nav button {
-            background-color: transparent;
-            color: #ffffff;
-            border: 1px solid transparent;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-btn);
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        nav button:hover, nav button.active-nav {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
+        nav button { background-color: transparent; color: #ffffff; border: 1px solid transparent; padding: 0.5rem 1rem; border-radius: var(--radius-btn); font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        nav button:hover, nav button.active-nav { background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
 
         main { padding: var(--spacing); max-width: 1200px; margin: 0 auto; }
 
-        .box {
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-box);
-            padding: var(--spacing);
-            margin-bottom: var(--spacing);
-        }
-
-        .box-header {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
+        /* --- BOX, BOTTONI E FORM --- */
+        .box { background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-box); padding: var(--spacing); margin-bottom: var(--spacing); }
+        .box-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-end; }
         .box-header h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
         .box-header p { color: var(--text-muted); font-size: 0.9rem; }
 
-        /* Bottoni */
-        .btn {
-            background-color: var(--brand-blue);
-            color: #ffffff;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius-btn);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
+        .btn { background-color: var(--brand-blue); color: #ffffff; border: none; padding: 0.75rem 1.5rem; border-radius: var(--radius-btn); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
         .btn:hover { background-color: #013a9b; }
         .btn:active { transform: scale(0.98); }
         .btn:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
@@ -107,107 +40,62 @@
         .btn-outline { background-color: transparent; color: var(--brand-blue); border: 1px solid var(--brand-blue); }
         .btn-outline:hover { background-color: rgba(1, 70, 188, 0.05); }
         .btn-small { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+        .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted); transition: color 0.2s; padding: 0 0.5rem; }
+        .btn-icon:hover { color: var(--brand-blue); }
 
-        /* Form e Input */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-main); }
+        input[type="text"], input[type="number"], input[type="date"], textarea, select { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; font-family: inherit; background-color: var(--bg-color); transition: border-color 0.2s; }
+        input:focus, textarea:focus { outline: none; border-color: var(--brand-blue); background-color: var(--surface-color); }
+        
+        .search-bar { width: 100%; max-width: 400px; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 20px; border: 1px solid var(--border-color); background-color: var(--bg-color); font-size: 0.95rem; }
 
-        .input-group label {
-            display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-main);
-        }
-
-        input[type="text"], input[type="number"], input[type="date"] {
-            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color);
-            border-radius: 6px; font-size: 1rem; font-family: inherit;
-            background-color: var(--bg-color); transition: border-color 0.2s;
-        }
-
-        input:focus { outline: none; border-color: var(--brand-blue); background-color: var(--surface-color); }
-
-        /* Barra di ricerca Dashboard */
-        .search-bar {
-            width: 100%;
-            max-width: 400px;
-            padding: 0.75rem 1rem 0.75rem 2.5rem;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-color);
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2386868b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
-            background-repeat: no-repeat;
-            background-position: 10px center;
-            font-size: 0.95rem;
-        }
-
-        /* Card dei Contratti */
-        .contract-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-box);
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: box-shadow 0.2s;
-        }
-
-        .contract-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
+        /* --- COMPONENTI UI --- */
+        .contract-card { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-box); padding: 1.25rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; transition: box-shadow 0.2s; }
+        .contract-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .card-info h4 { margin-bottom: 0.25rem; font-size: 1.1rem; color: var(--brand-blue); }
         .card-info p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.2rem; }
-        
-        .badge-tipo {
-            display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;
-        }
+        .badge-tipo { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; }
         .badge-quadro { background-color: rgba(1, 70, 188, 0.1); color: var(--brand-blue); }
         .badge-diretta { background-color: rgba(237, 220, 1, 0.3); color: #8a7b00; }
         .badge-terzi { background-color: #f0f0f5; color: var(--text-muted); }
+        .card-actions { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;}
+        .card-actions .valore { font-size: 1.25rem; font-weight: 600; display: block; }
 
-        .card-actions { text-align: right; }
-        .card-actions .valore { font-size: 1.25rem; font-weight: 600; display: block; margin-bottom: 0.5rem; }
+        .segmented-control { display: flex; background-color: var(--bg-color); border-radius: 8px; padding: 4px; margin-bottom: 2rem; border: 1px solid var(--border-color); }
+        .segmented-control button { flex: 1; padding: 0.5rem 1rem; border: none; background: transparent; font-weight: 600; color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+        .segmented-control button.active-segment { background-color: var(--surface-color); color: var(--brand-blue); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        /* Segmented Control per scelta contratto */
-        .segmented-control {
-            display: flex; background-color: var(--bg-color); border-radius: 8px;
-            padding: 4px; margin-bottom: 2rem; border: 1px solid var(--border-color);
-        }
-        
-        .segmented-control button {
-            flex: 1; padding: 0.5rem 1rem; border: none; background: transparent;
-            font-weight: 600; color: var(--text-muted); border-radius: 6px; cursor: pointer;
-            transition: all 0.2s; font-size: 0.9rem;
-        }
+        .budget-row { display: flex; gap: 1rem; margin-bottom: 0.75rem; align-items: center; background: var(--bg-color); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); }
+        .status-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
 
-        .segmented-control button.active-segment {
-            background-color: var(--surface-color); color: var(--brand-blue);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        /* Viste */
+        /* --- VISTE E MODALI --- */
         .view-section { display: none; }
         .view-section.active { display: block; animation: fadeIn 0.3s ease; }
         .contract-form { display: none; }
         .contract-form.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .dettaglio-header { background: var(--brand-blue); color: white; padding: 1.5rem; border-radius: var(--radius-box); margin-bottom: 1.5rem; }
+        .dettaglio-header h3 { margin-bottom: 0.5rem; }
+        .dettaglio-note { background: rgba(255,255,255,0.1); padding: 0.75rem; border-radius: 6px; margin-top: 1rem; font-size: 0.9rem; font-style: italic; }
 
-        .budget-row {
-            display: flex; gap: 1rem; margin-bottom: 0.75rem; align-items: center;
-            background: var(--bg-color); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color);
-        }
-        .status-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
-        
-        /* Utility */
-        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+        .ordine-card { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
+        .ordine-header { background: var(--bg-color); padding: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .ordine-body { padding: 1rem; }
+        .vap-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px dashed var(--border-color); font-size: 0.9rem; }
+        .vap-row:last-child { border-bottom: none; }
+        .vap-assestamento { font-size: 0.75rem; background: var(--brand-yellow); color: #000; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
+        .modal-content { background: var(--surface-color); padding: 2rem; border-radius: var(--radius-box); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-header h3 { font-size: 1.25rem; }
+        .btn-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        .checkbox-group { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.9rem;}
+        .checkbox-group input { width: auto; }
     </style>
 </head>
 <body>
@@ -216,7 +104,7 @@
         <h2>Gestione Contratti</h2>
         <nav>
             <button class="active-nav" onclick="switchView('dashboard', this)">Dashboard</button>
-            <button onclick="switchView('contratti', this)">Nuovo Contratto</button>
+            <button onclick="switchView('contratti', this); pulisciFormContratto();">Nuovo Contratto</button>
             <button onclick="switchView('impostazioni', this)">Impostazioni</button>
         </nav>
     </header>
@@ -225,29 +113,30 @@
         <section id="dashboard" class="view-section active">
             <div class="box">
                 <div class="box-header">
-                    <div>
-                        <h3>Archivio Contratti</h3>
-                        <p>Visualizza e cerca i contratti inseriti a sistema.</p>
-                    </div>
-                    <input type="text" id="search-contratti" class="search-bar" placeholder="Cerca fornitore o numero..." oninput="renderDashboard()">
+                    <div><h3>Archivio Contratti</h3><p>Visualizza, cerca e gestisci i contratti.</p></div>
+                    <input type="text" id="search-contratti" class="search-bar" placeholder="🔍 Cerca fornitore o numero..." oninput="renderDashboard()">
                 </div>
-                
-                <div id="lista-contratti-container">
-                    </div>
+                <div id="lista-contratti-container"></div>
             </div>
+        </section>
+
+        <section id="gestione-spese" class="view-section">
+            <button class="btn btn-outline" style="margin-bottom: 1rem;" onclick="switchView('dashboard', document.querySelector('nav button:first-child'))">← Torna alla Dashboard</button>
+            <div class="dettaglio-header" id="spese-header"></div>
+            <div id="spese-content" class="box"></div>
         </section>
 
         <section id="contratti" class="view-section">
             <div class="box">
                 <div class="box-header">
-                    <h3>Inserimento Nuovo Contratto</h3>
-                    <p>Seleziona la tipologia di contratto per mostrare i campi corretti.</p>
+                    <h3 id="titolo-form-contratto">Inserimento Nuovo Contratto</h3>
+                    <p>Compila i campi per salvare o aggiornare il contratto nel database.</p>
                 </div>
 
                 <div class="segmented-control" id="contract-selector">
-                    <button class="active-segment" onclick="switchContractType('form-quadro', this)">Contratto Quadro</button>
-                    <button onclick="switchContractType('form-diretta', this)">Assegnazione Diretta</button>
-                    <button onclick="switchContractType('form-terzi', this)">Terze Funzioni</button>
+                    <button class="active-segment" id="seg-quadro" onclick="switchContractType('form-quadro', this)">Contratto Quadro</button>
+                    <button id="seg-diretta" onclick="switchContractType('form-diretta', this)">Assegnazione Diretta</button>
+                    <button id="seg-terzi" onclick="switchContractType('form-terzi', this)">Terze Funzioni</button>
                 </div>
                 
                 <div id="form-quadro" class="contract-form active">
@@ -256,10 +145,10 @@
                         <div class="input-group"><label>Numero Identificativo</label><input type="text" id="cq-numero"></div>
                         <div class="input-group"><label>Data Inizio</label><input type="date" id="cq-inizio"></div>
                         <div class="input-group"><label>Data Fine</label><input type="date" id="cq-fine"></div>
-                        <div class="input-group"><label>Valore Complessivo (Netto €)</label><input type="number" id="cq-valore" oninput="calcolaQuadratura()"></div>
+                        <div class="input-group"><label>Valore (Netto €)</label><input type="number" id="cq-valore" oninput="calcolaQuadratura()"></div>
+                        <div class="input-group" style="grid-column: 1 / -1;"><label>Note</label><textarea id="cq-note" rows="2"></textarea></div>
                     </div>
-
-                    <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                    <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                             <h4>Ripartizione Budget</h4>
                             <span id="cq-status-quadratura" class="status-badge" style="background: #ffebeb; color: #d93025;">Da quadrare</span>
@@ -275,234 +164,458 @@
                         <div class="input-group"><label>Numero Identificativo</label><input type="text" id="cd-numero"></div>
                         <div class="input-group"><label>Data Inizio</label><input type="date" id="cd-inizio"></div>
                         <div class="input-group"><label>Data Fine</label><input type="date" id="cd-fine"></div>
-                        <div class="input-group"><label>Valore Complessivo (Netto €)</label><input type="number" id="cd-valore"></div>
+                        <div class="input-group"><label>Valore (Netto €)</label><input type="number" id="cd-valore"></div>
+                        <div class="input-group" style="grid-column: 1 / -1;"><label>Note</label><textarea id="cd-note" rows="2"></textarea></div>
                     </div>
                 </div>
 
                 <div id="form-terzi" class="contract-form">
                     <div class="form-grid">
                         <div class="input-group"><label>Fornitore</label><input type="text" id="ct-fornitore"></div>
-                        <div class="input-group"><label>Funzione Gestore</label><input type="text" id="ct-funzione" placeholder="Es. Acquisti, HR..."></div>
+                        <div class="input-group"><label>Funzione Gestore</label><input type="text" id="ct-funzione"></div>
                         <div class="input-group"><label>Data Inizio</label><input type="date" id="ct-inizio"></div>
                         <div class="input-group"><label>Data Fine</label><input type="date" id="ct-fine"></div>
                         <div class="input-group"><label>Valore Imputato (Netto €)</label><input type="number" id="ct-valore"></div>
+                        <div class="input-group" style="grid-column: 1 / -1;"><label>Note</label><textarea id="ct-note" rows="2"></textarea></div>
                     </div>
                 </div>
 
                 <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn btn-outline" onclick="pulisciForm()">Annulla / Pulisci</button>
+                    <button class="btn btn-outline" onclick="pulisciFormContratto()">Annulla</button>
                     <button class="btn btn-yellow" id="btn-salva-contratto" onclick="salvaContrattoAttivo(this)">Salva Contratto</button>
                 </div>
             </div>
         </section>
 
-        <section id="impostazioni" class="view-section box"><h3>Impostazioni</h3><p>Area in costruzione.</p></section>
+        <section id="impostazioni" class="view-section box">
+            <h3>Gestione Dati Locali</h3>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Esporta il database per il backup, importa un backup esistente o formatta il sistema.</p>
+            
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-outline" onclick="exportData(this)">💾 Esporta JSON</button>
+                
+                <label class="btn btn-outline" for="import-file" style="margin: 0; cursor: pointer;">📂 Importa JSON</label>
+                <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+                
+                <button class="btn" style="background-color: #d93025; margin-left: auto;" onclick="cancellaDati()">⚠️ Cancella Tutto</button>
+            </div>
+        </section>
     </main>
 
-    <script>
-        /* --- MOTORE DATI E LOGICA --- */
-        const DB_KEY = "contratti_db_v1";
-        let appData = { contratti: [], ordini: [], vap: [] };
-        let tipoContrattoAttivo = 'quadro';
+    <div id="modal-rda" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="titolo-modale-rda">Aggiungi Ordine (RDA / ODA)</h3>
+                <button class="btn-close" onclick="chiudiModale('modal-rda')">&times;</button>
+            </div>
+            <div class="form-grid">
+                <div class="input-group"><label>Numero RDA</label><input type="text" id="rda-num"></div>
+                <div class="input-group"><label>Data RDA</label><input type="date" id="rda-data"></div>
+                <div class="input-group"><label>Numero ODA</label><input type="text" id="oda-num"></div>
+                <div class="input-group"><label>Data ODA</label><input type="date" id="oda-data"></div>
+                <div class="input-group"><label>Valore Complessivo Ordine (€)</label><input type="number" id="rda-valore"></div>
+            </div>
+            <div style="text-align: right; margin-top: 1rem;">
+                <button class="btn btn-yellow" id="btn-salva-rda" onclick="salvaRda(this)">Salva Ordine</button>
+            </div>
+        </div>
+    </div>
 
-        // Inizializzazione
+    <div id="modal-vap" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="titolo-modale-vap">Autorizza Pagamento (VAP)</h3>
+                <button class="btn-close" onclick="chiudiModale('modal-vap')">&times;</button>
+            </div>
+            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--brand-blue);" id="vap-ordine-ref"></p>
+            <input type="hidden" id="vap-id-ordine">
+            
+            <div class="form-grid">
+                <div class="input-group"><label>Numero VAP</label><input type="text" id="vap-num"></div>
+                <div class="input-group"><label>Data VAP</label><input type="date" id="vap-data"></div>
+                <div class="input-group"><label>Importo (€)</label><input type="number" id="vap-valore"></div>
+                <div class="input-group"><label>Anno di Esercizio</label><input type="number" id="vap-anno" placeholder="Es. 2026"></div>
+                <div class="input-group" id="vap-funzione-container"><label>Funzione</label><input type="text" id="vap-funzione" placeholder="Es. IT"></div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="vap-assestamento">
+                <label for="vap-assestamento">Segna come VAP in assestamento</label>
+            </div>
+            
+            <div style="text-align: right; margin-top: 1.5rem;">
+                <button class="btn btn-yellow" id="btn-salva-vap" onclick="salvaVap(this)">Registra Pagamento</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- MOTORE DATI E STATO GLOBALE --- */
+        const DB_KEY = "contratti_db_v3";
+        let appData = { contratti: [], ordini: [], vap: [] };
+        
+        // VARIABILI DI STATO (Edit Mode)
+        let tipoContrattoAttivo = 'quadro';
+        let contrattoInGestioneId = null;
+        let editContrattoId = null;
+        let editOrdineId = null;
+        let editVapId = null;
+
+        // INIZIALIZZAZIONE
         window.onload = () => {
             const savedData = localStorage.getItem(DB_KEY);
             if(savedData) appData = JSON.parse(savedData);
-            aggiungiRigaBudget(); 
-            calcolaQuadratura();
-            renderDashboard(); // Popola la dashboard all'avvio
+            aggiungiRigaBudget(); calcolaQuadratura(); renderDashboard();
         };
 
-        function salvaDati() {
-            localStorage.setItem(DB_KEY, JSON.stringify(appData));
+        /* --- GESTIONE DATABASE (SALVATAGGIO, IMPORT, EXPORT) --- */
+        function salvaDati() { localStorage.setItem(DB_KEY, JSON.stringify(appData)); }
+        function formattatoreValuta(num) { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(num || 0); }
+        function cancellaDati() { if(confirm("Sei sicuro di voler formattare il database? Tutti i dati andranno persi.")) { localStorage.clear(); location.reload(); } }
+        
+        function exportData(btn) {
+            withFeedback(btn, "Export...", "Scaricato", "💾 Esporta JSON", () => {
+                const dataStr = JSON.stringify(appData, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `backup_contratti.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            });
         }
 
-        function formattatoreValuta(numero) {
-            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(numero || 0);
+        // NUOVA FUNZIONE: IMPORT JSON
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    // Validazione basica
+                    if (imported.contratti && Array.isArray(imported.contratti)) {
+                        appData.contratti = imported.contratti || [];
+                        appData.ordini = imported.ordini || [];
+                        appData.vap = imported.vap || [];
+                        salvaDati();
+                        alert("Database importato con successo!");
+                        location.reload();
+                    } else { alert("Il file JSON non ha un formato valido."); }
+                } catch(err) { alert("Errore di lettura del file JSON."); }
+            };
+            reader.readAsText(file);
         }
 
-        // Animazione Testuale Bottoni
         function withFeedback(btn, loadingText, successText, originalText, callback) {
-            btn.disabled = true;
-            btn.textContent = loadingText;
+            btn.disabled = true; btn.textContent = loadingText;
             setTimeout(() => {
-                callback();
-                btn.textContent = successText;
-                btn.style.backgroundColor = "#28a745"; btn.style.color = "#fff";
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.textContent = originalText;
-                    btn.style.backgroundColor = ""; btn.style.color = "";
-                }, 2000);
-            }, 600);
+                callback(); btn.textContent = successText; btn.style.backgroundColor = "#28a745"; btn.style.color = "#fff";
+                setTimeout(() => { btn.disabled = false; btn.textContent = originalText; btn.style.backgroundColor = ""; btn.style.color = ""; }, 2000);
+            }, 300);
         }
 
-        // Switch Navigazione
+        /* --- NAVIGAZIONE --- */
         function switchView(viewId, btnElement) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
-            btnElement.classList.add('active-nav');
-            
-            if(viewId === 'dashboard') {
-                renderDashboard();
+            if(btnElement && btnElement.parentElement.tagName === 'NAV') {
+                document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
+                btnElement.classList.add('active-nav');
             }
+            if(viewId === 'dashboard') renderDashboard();
         }
 
-        // Switch Form Contratti
         function switchContractType(formId, btnElement) {
+            if(editContrattoId) return; // Se stiamo modificando, blocca il cambio tipologia
+            
             document.querySelectorAll('.contract-form').forEach(el => el.classList.remove('active'));
             document.getElementById(formId).classList.add('active');
-            
             document.querySelectorAll('.segmented-control button').forEach(btn => btn.classList.remove('active-segment'));
             btnElement.classList.add('active-segment');
             
             if(formId === 'form-quadro') tipoContrattoAttivo = 'quadro';
             if(formId === 'form-diretta') tipoContrattoAttivo = 'diretta';
             if(formId === 'form-terzi') tipoContrattoAttivo = 'terzi';
-
-            const btnSalva = document.getElementById('btn-salva-contratto');
-            if(tipoContrattoAttivo === 'quadro') calcolaQuadratura(); 
-            else btnSalva.disabled = false; 
-        }
-
-        /* --- LOGICA BUDGET --- */
-        function aggiungiRigaBudget() {
-            const container = document.getElementById('container-ripartizioni');
-            const riga = document.createElement('div');
-            riga.className = 'budget-row';
-            riga.innerHTML = `
-                <input type="text" placeholder="Funzione (es. IT)" class="b-funzione" style="flex: 2;">
-                <input type="number" placeholder="Anno (es. 2026)" class="b-anno" style="flex: 1;">
-                <input type="number" placeholder="Importo €" class="b-importo" oninput="calcolaQuadratura()" style="flex: 2;">
-                <button onclick="this.parentElement.remove(); calcolaQuadratura()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted);">✕</button>
-            `;
-            container.appendChild(riga);
-        }
-
-        function calcolaQuadratura() {
-            if(tipoContrattoAttivo !== 'quadro') return;
-            const totale = parseFloat(document.getElementById('cq-valore').value) || 0;
-            let somma = 0;
-            document.querySelectorAll('.b-importo').forEach(input => somma += parseFloat(input.value) || 0);
-
-            const diff = Math.abs(totale - somma);
-            const badge = document.getElementById('cq-status-quadratura');
-            const btnSalva = document.getElementById('btn-salva-contratto');
-
-            if (totale > 0 && diff < 0.01) {
-                badge.textContent = "Budget Quadrato"; badge.style.background = "#e6f4ea"; badge.style.color = "#137333";
-                btnSalva.disabled = false;
-            } else {
-                badge.textContent = `Scostamento: ${(totale - somma).toFixed(2)} €`; badge.style.background = "#ffebeb"; badge.style.color = "#d93025";
-                btnSalva.disabled = true;
-            }
-        }
-
-        /* --- SALVATAGGIO --- */
-        function salvaContrattoAttivo(btn) {
-            withFeedback(btn, "Salvataggio...", "Salvato!", "Salva Contratto", () => {
-                let nuovoContratto = {
-                    id: "CTR-" + Date.now(),
-                    tipo: tipoContrattoAttivo,
-                    proroghe: [],
-                    dataCreazione: new Date().toISOString()
-                };
-
-                if (tipoContrattoAttivo === 'quadro') {
-                    nuovoContratto.fornitore = document.getElementById('cq-fornitore').value;
-                    nuovoContratto.numero = document.getElementById('cq-numero').value;
-                    nuovoContratto.dataInizio = document.getElementById('cq-inizio').value;
-                    nuovoContratto.dataFine = document.getElementById('cq-fine').value;
-                    nuovoContratto.valore = parseFloat(document.getElementById('cq-valore').value) || 0;
-                    nuovoContratto.ripartizioni = [];
-                    document.querySelectorAll('.budget-row').forEach(row => {
-                        nuovoContratto.ripartizioni.push({
-                            funzione: row.querySelector('.b-funzione').value,
-                            anno: parseInt(row.querySelector('.b-anno').value) || 0,
-                            importo: parseFloat(row.querySelector('.b-importo').value) || 0
-                        });
-                    });
-                } else if (tipoContrattoAttivo === 'diretta') {
-                    nuovoContratto.fornitore = document.getElementById('cd-fornitore').value;
-                    nuovoContratto.numero = document.getElementById('cd-numero').value;
-                    nuovoContratto.dataInizio = document.getElementById('cd-inizio').value;
-                    nuovoContratto.dataFine = document.getElementById('cd-fine').value;
-                    nuovoContratto.valore = parseFloat(document.getElementById('cd-valore').value) || 0;
-                } else if (tipoContrattoAttivo === 'terzi') {
-                    nuovoContratto.fornitore = document.getElementById('ct-fornitore').value;
-                    nuovoContratto.numero = "N/A"; // Le terze funzioni potrebbero non avere numero noto
-                    nuovoContratto.funzioneGestore = document.getElementById('ct-funzione').value;
-                    nuovoContratto.dataInizio = document.getElementById('ct-inizio').value;
-                    nuovoContratto.dataFine = document.getElementById('ct-fine').value;
-                    nuovoContratto.valore = parseFloat(document.getElementById('ct-valore').value) || 0;
-                }
-
-                appData.contratti.push(nuovoContratto);
-                salvaDati();
-                renderDashboard(); // Aggiorna la vista
-                setTimeout(pulisciForm, 1000);
-            });
-        }
-
-        function pulisciForm() {
-            document.querySelectorAll('input:not(.search-bar)').forEach(input => input.value = '');
-            document.getElementById('container-ripartizioni').innerHTML = '';
-            aggiungiRigaBudget();
             calcolaQuadratura();
         }
 
-        /* --- DASHBOARD E RICERCA --- */
+        function apriModale(id) { document.getElementById(id).classList.add('active'); }
+        function chiudiModale(id) { document.getElementById(id).classList.remove('active'); }
+
+        /* --- DASHBOARD --- */
         function renderDashboard() {
             const container = document.getElementById('lista-contratti-container');
-            container.innerHTML = ''; // Svuota il contenitore
+            container.innerHTML = ''; 
+            const search = document.getElementById('search-contratti').value.toLowerCase();
+            let filtrati = [...appData.contratti].sort((a, b) => new Date(b.dataCreazione) - new Date(a.dataCreazione)).filter(c => `${c.fornitore||''} ${c.numero||''} ${c.tipo||''} ${c.funzioneGestore||''}`.toLowerCase().includes(search));
+            
+            if(filtrati.length === 0) { container.innerHTML = `<div class="empty-state">Nessun contratto trovato.</div>`; return; }
 
-            const searchTerm = document.getElementById('search-contratti').value.toLowerCase();
-
-            // 1. Ordina dal più recente al più vecchio (in base a dataCreazione)
-            let contrattiOrdinati = [...appData.contratti].sort((a, b) => new Date(b.dataCreazione) - new Date(a.dataCreazione));
-
-            // 2. Filtra in base al termine di ricerca
-            let contrattiFiltrati = contrattiOrdinati.filter(c => {
-                const searchString = `${c.fornitore || ''} ${c.numero || ''} ${c.tipo || ''} ${c.funzioneGestore || ''}`.toLowerCase();
-                return searchString.includes(searchTerm);
-            });
-
-            // 3. Genera l'HTML
-            if(contrattiFiltrati.length === 0) {
-                container.innerHTML = `<div class="empty-state">Nessun contratto trovato.</div>`;
-                return;
-            }
-
-            contrattiFiltrati.forEach(c => {
-                // Etichetta Tipo Contratto
-                let badgeClass = '';
-                let labelTipo = '';
-                if(c.tipo === 'quadro') { badgeClass = 'badge-quadro'; labelTipo = 'Quadro'; }
-                else if(c.tipo === 'diretta') { badgeClass = 'badge-diretta'; labelTipo = 'Diretta'; }
-                else { badgeClass = 'badge-terzi'; labelTipo = 'Terze Funzioni'; }
-
-                const card = document.createElement('div');
-                card.className = 'contract-card';
+            filtrati.forEach(c => {
+                let badge = c.tipo === 'quadro' ? 'badge-quadro' : (c.tipo === 'diretta' ? 'badge-diretta' : 'badge-terzi');
+                let label = c.tipo === 'quadro' ? 'Quadro' : (c.tipo === 'diretta' ? 'Diretta' : 'Terze Funzioni');
+                const card = document.createElement('div'); card.className = 'contract-card';
                 card.innerHTML = `
                     <div class="card-info">
-                        <span class="badge-tipo ${badgeClass}">${labelTipo}</span>
-                        <h4>${c.fornitore || 'Fornitore Non Inserito'}</h4>
-                        <p><strong>N°:</strong> ${c.numero || 'N/A'} | <strong>Periodo:</strong> ${c.dataInizio || '-'} / ${c.dataFine || '-'}</p>
-                        ${c.tipo === 'terzi' ? `<p><strong>Gestore:</strong> ${c.funzioneGestore}</p>` : ''}
+                        <span class="badge-tipo ${badge}">${label}</span>
+                        <h4>${c.fornitore||'Fornitore Manca'}</h4>
+                        <p><strong>N°:</strong> ${c.numero||'-'} | <strong>Periodo:</strong> ${c.dataInizio||'-'} / ${c.dataFine||'-'}</p>
                     </div>
                     <div class="card-actions">
                         <span class="valore">${formattatoreValuta(c.valore)}</span>
-                        <button class="btn btn-outline btn-small" onclick="apriDettaglioContratto('${c.id}')">Gestisci Spese</button>
-                    </div>
-                `;
+                        <div>
+                            <button class="btn btn-outline btn-small" onclick="caricaContrattoPerModifica('${c.id}')">✏️ Modifica</button>
+                            <button class="btn btn-small" onclick="apriDettaglioContratto('${c.id}')">Gestisci Spese →</button>
+                        </div>
+                    </div>`;
                 container.appendChild(card);
             });
         }
 
+        /* --- LOGICA MODIFICA CONTRATTO --- */
+        function caricaContrattoPerModifica(id) {
+            editContrattoId = id;
+            const ctr = appData.contratti.find(c => c.id === id);
+            if(!ctr) return;
+
+            // Forza il tab corretto nel form e disabilita gli altri tab
+            tipoContrattoAttivo = ctr.tipo;
+            document.querySelectorAll('.contract-form').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.segmented-control button').forEach(btn => {
+                btn.classList.remove('active-segment');
+                btn.style.opacity = "0.5"; btn.style.pointerEvents = "none"; // Blocca cambio tipo in modifica
+            });
+            
+            let targetFormId = `form-${ctr.tipo}`;
+            document.getElementById(targetFormId).classList.add('active');
+            document.getElementById(`seg-${ctr.tipo}`).classList.add('active-segment');
+            document.getElementById(`seg-${ctr.tipo}`).style.opacity = "1";
+
+            document.getElementById('titolo-form-contratto').innerText = "Modifica Contratto: " + ctr.fornitore;
+            document.getElementById('btn-salva-contratto').innerText = "Aggiorna Contratto";
+
+            // Popolamento Form
+            if (ctr.tipo === 'quadro') {
+                document.getElementById('cq-fornitore').value = ctr.fornitore || ''; document.getElementById('cq-numero').value = ctr.numero || '';
+                document.getElementById('cq-inizio').value = ctr.dataInizio || ''; document.getElementById('cq-fine').value = ctr.dataFine || '';
+                document.getElementById('cq-valore').value = ctr.valore || ''; document.getElementById('cq-note').value = ctr.note || '';
+                
+                const containerRip = document.getElementById('container-ripartizioni');
+                containerRip.innerHTML = ''; // Svuota righe
+                if(ctr.ripartizioni && ctr.ripartizioni.length > 0) {
+                    ctr.ripartizioni.forEach(rip => aggiungiRigaBudgetConDati(rip.funzione, rip.anno, rip.importo));
+                } else { aggiungiRigaBudget(); }
+                calcolaQuadratura();
+            } else if (ctr.tipo === 'diretta') {
+                document.getElementById('cd-fornitore').value = ctr.fornitore || ''; document.getElementById('cd-numero').value = ctr.numero || '';
+                document.getElementById('cd-inizio').value = ctr.dataInizio || ''; document.getElementById('cd-fine').value = ctr.dataFine || '';
+                document.getElementById('cd-valore').value = ctr.valore || ''; document.getElementById('cd-note').value = ctr.note || '';
+            } else if (ctr.tipo === 'terzi') {
+                document.getElementById('ct-fornitore').value = ctr.fornitore || ''; document.getElementById('ct-funzione').value = ctr.funzioneGestore || '';
+                document.getElementById('ct-inizio').value = ctr.dataInizio || ''; document.getElementById('ct-fine').value = ctr.dataFine || '';
+                document.getElementById('ct-valore').value = ctr.valore || ''; document.getElementById('ct-note').value = ctr.note || '';
+            }
+            switchView('contratti', document.querySelectorAll('nav button')[1]);
+        }
+
+        function aggiungiRigaBudgetConDati(funz, anno, importo) {
+            const container = document.getElementById('container-ripartizioni');
+            const riga = document.createElement('div'); riga.className = 'budget-row';
+            riga.innerHTML = `<input type="text" class="b-funzione" style="flex: 2;" value="${funz||''}"><input type="number" class="b-anno" style="flex: 1;" value="${anno||''}"><input type="number" class="b-importo" oninput="calcolaQuadratura()" style="flex: 2;" value="${importo||''}"><button onclick="this.parentElement.remove(); calcolaQuadratura()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted);">✕</button>`;
+            container.appendChild(riga);
+        }
+
+        function aggiungiRigaBudget() { aggiungiRigaBudgetConDati('','',''); }
+
+        function calcolaQuadratura() {
+            if(tipoContrattoAttivo !== 'quadro') { document.getElementById('btn-salva-contratto').disabled = false; return; }
+            const totale = parseFloat(document.getElementById('cq-valore').value) || 0;
+            let somma = 0; document.querySelectorAll('.b-importo').forEach(i => somma += parseFloat(i.value) || 0);
+            const badge = document.getElementById('cq-status-quadratura'); const btn = document.getElementById('btn-salva-contratto');
+            if (totale > 0 && Math.abs(totale - somma) < 0.01) { badge.textContent = "Budget Quadrato"; badge.style.background = "#e6f4ea"; badge.style.color = "#137333"; btn.disabled = false; }
+            else { badge.textContent = `Scostamento: ${(totale - somma).toFixed(2)} €`; badge.style.background = "#ffebeb"; badge.style.color = "#d93025"; btn.disabled = true; }
+        }
+
+        function salvaContrattoAttivo(btn) {
+            withFeedback(btn, "Salvataggio...", "Fatto!", editContrattoId ? "Aggiorna Contratto" : "Salva Contratto", () => {
+                let ctr = { 
+                    id: editContrattoId ? editContrattoId : "CTR-" + Date.now(), 
+                    tipo: tipoContrattoAttivo, 
+                    dataCreazione: editContrattoId ? appData.contratti.find(c=>c.id===editContrattoId).dataCreazione : new Date().toISOString() 
+                };
+
+                if (tipoContrattoAttivo === 'quadro') {
+                    ctr.fornitore = document.getElementById('cq-fornitore').value; ctr.numero = document.getElementById('cq-numero').value;
+                    ctr.dataInizio = document.getElementById('cq-inizio').value; ctr.dataFine = document.getElementById('cq-fine').value;
+                    ctr.valore = parseFloat(document.getElementById('cq-valore').value) || 0; ctr.note = document.getElementById('cq-note').value;
+                    ctr.ripartizioni = []; document.querySelectorAll('.budget-row').forEach(row => { ctr.ripartizioni.push({ funzione: row.querySelector('.b-funzione').value, anno: row.querySelector('.b-anno').value, importo: parseFloat(row.querySelector('.b-importo').value)||0 }); });
+                } else if (tipoContrattoAttivo === 'diretta') {
+                    ctr.fornitore = document.getElementById('cd-fornitore').value; ctr.numero = document.getElementById('cd-numero').value;
+                    ctr.dataInizio = document.getElementById('cd-inizio').value; ctr.dataFine = document.getElementById('cd-fine').value;
+                    ctr.valore = parseFloat(document.getElementById('cd-valore').value) || 0; ctr.note = document.getElementById('cd-note').value;
+                } else if (tipoContrattoAttivo === 'terzi') {
+                    ctr.fornitore = document.getElementById('ct-fornitore').value; ctr.numero = "N/A"; ctr.funzioneGestore = document.getElementById('ct-funzione').value;
+                    ctr.dataInizio = document.getElementById('ct-inizio').value; ctr.dataFine = document.getElementById('ct-fine').value;
+                    ctr.valore = parseFloat(document.getElementById('ct-valore').value) || 0; ctr.note = document.getElementById('ct-note').value;
+                }
+
+                if (editContrattoId) {
+                    const idx = appData.contratti.findIndex(c => c.id === editContrattoId);
+                    if(idx !== -1) appData.contratti[idx] = ctr;
+                } else { appData.contratti.push(ctr); }
+
+                salvaDati(); pulisciFormContratto(); switchView('dashboard', document.querySelectorAll('nav button')[0]);
+            });
+        }
+
+        function pulisciFormContratto() {
+            editContrattoId = null;
+            document.querySelectorAll('.contract-form input, .contract-form textarea').forEach(i => i.value = '');
+            document.getElementById('container-ripartizioni').innerHTML = ''; 
+            aggiungiRigaBudget(); calcolaQuadratura();
+            
+            // Ripristina UI Bottoni
+            document.getElementById('titolo-form-contratto').innerText = "Inserimento Nuovo Contratto";
+            document.getElementById('btn-salva-contratto').innerText = "Salva Contratto";
+            document.querySelectorAll('.segmented-control button').forEach(btn => {
+                btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
+            });
+            switchContractType('form-quadro', document.getElementById('seg-quadro'));
+        }
+
+        /* --- GESTIONE SPESE (DETTAGLIO, RDA, VAP) --- */
         function apriDettaglioContratto(id) {
-            alert(`Hai cliccato per gestire il contratto con ID: ${id}.\nQui si aprirà la schermata per inserire RDA, ODA e VAP!`);
+            contrattoInGestioneId = id; const ctr = appData.contratti.find(c => c.id === id);
+            if(!ctr) return;
+
+            let label = ctr.tipo === 'quadro' ? 'Contratto Quadro' : (ctr.tipo === 'diretta' ? 'Assegnazione Diretta' : 'Terze Funzioni');
+            document.getElementById('spese-header').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span><h3 style="margin-top:0.5rem;">${ctr.fornitore}</h3><p><strong>N°:</strong> ${ctr.numero} | <strong>Validità:</strong> ${ctr.dataInizio} / ${ctr.dataFine}</p></div><div style="text-align:right;"><span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p>Budget Totale</p></div></div>${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
+
+            const content = document.getElementById('spese-content');
+            if (ctr.tipo === 'terzi') {
+                content.innerHTML = `<div class="empty-state"><h4>Nessuna RDA necessaria</h4><p>Contratto gestito da ${ctr.funzioneGestore}.</p></div>`;
+            } else {
+                content.innerHTML = `<div class="box-header"><div><h4>Elenco Ordini (RDA/ODA)</h4></div><button class="btn btn-yellow btn-small" onclick="predisponiRdaNuova()">+ Nuova RDA</button></div><div id="lista-ordini"></div>`;
+                renderOrdini(ctr.id, ctr.tipo);
+            }
+            switchView('gestione-spese');
+        }
+
+        function renderOrdini(idContratto, tipoContratto) {
+            const container = document.getElementById('lista-ordini'); container.innerHTML = '';
+            const ordiniCtr = appData.ordini.filter(o => o.idContratto === idContratto);
+            
+            if(ordiniCtr.length === 0) { container.innerHTML = `<div class="empty-state" style="padding:1rem;">Nessun ordine registrato.</div>`; return; }
+
+            ordiniCtr.forEach(o => {
+                const vaps = appData.vap.filter(v => v.idOrdine === o.id);
+                let totaleVap = 0; vaps.forEach(v => totaleVap += v.valore);
+                let residuo = o.valore - totaleVap;
+
+                let vapHtml = vaps.length === 0 ? `<p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Nessun VAP registrato.</p>` : vaps.map(v => 
+                    `<div class="vap-row">
+                        <span><button class="btn-icon" onclick="caricaVapPerModifica('${v.id}')">✏️</button> <strong>VAP:</strong> ${v.num} | ${v.data} | Anno: ${v.anno} ${v.funzione ? `| Funz: ${v.funzione}` : ''} ${v.assestamento ? '<span class="vap-assestamento">Assestamento</span>' : ''}</span>
+                        <strong style="color:var(--brand-blue);">${formattatoreValuta(v.valore)}</strong>
+                    </div>`
+                ).join('');
+
+                const card = document.createElement('div'); card.className = 'ordine-card';
+                card.innerHTML = `
+                    <div class="ordine-header">
+                        <div>
+                            <h4 style="margin-bottom:0.2rem;"><button class="btn-icon" onclick="caricaRdaPerModifica('${o.id}')" style="margin-right:0.5rem;">✏️</button>RDA: ${o.rdaNum||'-'} (ODA: ${o.odaNum||'-'})</h4>
+                            <span style="font-size:0.85rem; color:var(--text-muted); margin-left: 2.2rem;">Data: ${o.rdaData||'-'} | Data ODA: ${o.odaData||'-'}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="display:block; font-weight:600; font-size:1.1rem;">Valore: ${formattatoreValuta(o.valore)}</span>
+                            <span style="display:block; font-size:0.85rem; color:${residuo < 0 ? 'red' : 'green'};">Da liquidare: ${formattatoreValuta(residuo)}</span>
+                        </div>
+                    </div>
+                    <div class="ordine-body">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <h5 style="color:var(--text-muted); text-transform:uppercase; font-size:0.8rem;">Elenco Pagamenti (VAP)</h5>
+                            <button class="btn btn-outline btn-small" onclick="predisponiVapNuovo('${o.id}', '${o.rdaNum}', '${tipoContratto}')">+ Aggiungi VAP</button>
+                        </div>
+                        ${vapHtml}
+                    </div>`;
+                container.appendChild(card);
+            });
+        }
+
+        /* LOGICA RDA */
+        function predisponiRdaNuova() {
+            editOrdineId = null;
+            document.querySelectorAll('#modal-rda input').forEach(i => i.value = '');
+            document.getElementById('titolo-modale-rda').innerText = "Aggiungi Ordine (RDA / ODA)";
+            document.getElementById('btn-salva-rda').innerText = "Salva Ordine";
+            apriModale('modal-rda');
+        }
+
+        function caricaRdaPerModifica(id) {
+            editOrdineId = id; const ord = appData.ordini.find(o => o.id === id); if(!ord) return;
+            document.getElementById('rda-num').value = ord.rdaNum || ''; document.getElementById('rda-data').value = ord.rdaData || '';
+            document.getElementById('oda-num').value = ord.odaNum || ''; document.getElementById('oda-data').value = ord.odaData || '';
+            document.getElementById('rda-valore').value = ord.valore || '';
+            document.getElementById('titolo-modale-rda').innerText = "Modifica Ordine";
+            document.getElementById('btn-salva-rda').innerText = "Aggiorna Ordine";
+            apriModale('modal-rda');
+        }
+
+        function salvaRda(btn) {
+            withFeedback(btn, "Salvataggio...", "Salvato", editOrdineId ? "Aggiorna Ordine" : "Salva Ordine", () => {
+                let ord = {
+                    id: editOrdineId ? editOrdineId : "ORD-" + Date.now(), idContratto: contrattoInGestioneId,
+                    rdaNum: document.getElementById('rda-num').value, rdaData: document.getElementById('rda-data').value,
+                    odaNum: document.getElementById('oda-num').value, odaData: document.getElementById('oda-data').value,
+                    valore: parseFloat(document.getElementById('rda-valore').value) || 0
+                };
+                if(editOrdineId) { const idx = appData.ordini.findIndex(o => o.id === editOrdineId); if(idx !== -1) appData.ordini[idx] = ord; }
+                else { appData.ordini.push(ord); }
+                salvaDati(); chiudiModale('modal-rda'); renderOrdini(contrattoInGestioneId, appData.contratti.find(c=>c.id===contrattoInGestioneId).tipo);
+            });
+        }
+
+        /* LOGICA VAP */
+        function predisponiVapNuovo(idOrdine, numRda, tipoContratto) {
+            editVapId = null;
+            document.querySelectorAll('#modal-vap input[type="text"], #modal-vap input[type="number"], #modal-vap input[type="date"]').forEach(i => i.value = '');
+            document.getElementById('vap-assestamento').checked = false;
+            document.getElementById('vap-id-ordine').value = idOrdine;
+            document.getElementById('vap-ordine-ref').innerText = `Riferimento: RDA ${numRda}`;
+            document.getElementById('vap-funzione-container').style.display = tipoContratto === 'quadro' ? 'block' : 'none';
+            document.getElementById('titolo-modale-vap').innerText = "Autorizza Pagamento (VAP)";
+            document.getElementById('btn-salva-vap').innerText = "Registra Pagamento";
+            apriModale('modal-vap');
+        }
+
+        function caricaVapPerModifica(id) {
+            editVapId = id; const v = appData.vap.find(vap => vap.id === id); if(!v) return;
+            const ord = appData.ordini.find(o => o.id === v.idOrdine); const ctr = appData.contratti.find(c => c.id === ord.idContratto);
+            
+            document.getElementById('vap-id-ordine').value = v.idOrdine;
+            document.getElementById('vap-ordine-ref').innerText = `Riferimento: RDA ${ord.rdaNum}`;
+            document.getElementById('vap-funzione-container').style.display = ctr.tipo === 'quadro' ? 'block' : 'none';
+            
+            document.getElementById('vap-num').value = v.num || ''; document.getElementById('vap-data').value = v.data || '';
+            document.getElementById('vap-valore').value = v.valore || ''; document.getElementById('vap-anno').value = v.anno || '';
+            document.getElementById('vap-funzione').value = v.funzione || ''; document.getElementById('vap-assestamento').checked = v.assestamento || false;
+
+            document.getElementById('titolo-modale-vap').innerText = "Modifica Pagamento (VAP)";
+            document.getElementById('btn-salva-vap').innerText = "Aggiorna VAP";
+            apriModale('modal-vap');
+        }
+
+        function salvaVap(btn) {
+            withFeedback(btn, "Salvataggio...", "Fatto!", editVapId ? "Aggiorna VAP" : "Registra Pagamento", () => {
+                let vap = {
+                    id: editVapId ? editVapId : "VAP-" + Date.now(), idOrdine: document.getElementById('vap-id-ordine').value,
+                    num: document.getElementById('vap-num').value, data: document.getElementById('vap-data').value,
+                    valore: parseFloat(document.getElementById('vap-valore').value) || 0, anno: document.getElementById('vap-anno').value,
+                    funzione: document.getElementById('vap-funzione').value, assestamento: document.getElementById('vap-assestamento').checked
+                };
+                if(editVapId) { const idx = appData.vap.findIndex(v => v.id === editVapId); if(idx !== -1) appData.vap[idx] = vap; }
+                else { appData.vap.push(vap); }
+                salvaDati(); chiudiModale('modal-vap'); renderOrdini(contrattoInGestioneId, appData.contratti.find(c=>c.id===contrattoInGestioneId).tipo);
+            });
         }
     </script>
 </body>

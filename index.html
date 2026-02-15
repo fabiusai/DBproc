@@ -720,39 +720,78 @@
                 const pagatoVap = vaps.reduce((sum, v) => sum + v.valore, 0);
                 
                 let statsFunzioni = {};
+                // 1. Carico i valori previsti (se esistenti)
+                if (ctr.ripartizioni) {
+                    ctr.ripartizioni.forEach(r => {
+                        const f = r.funzione || 'N/D';
+                        if (!statsFunzioni[f]) statsFunzioni[f] = { previsto: 0, rda: 0, vap: 0 };
+                        statsFunzioni[f].previsto += (r.importo || 0);
+                    });
+                }
+                
+                // 2. Carico Impegnato RDA
                 ordini.forEach(o => {
                     const f = o.funzione || 'N/D';
-                    if (!statsFunzioni[f]) statsFunzioni[f] = { rda: 0, vap: 0 };
+                    if (!statsFunzioni[f]) statsFunzioni[f] = { previsto: 0, rda: 0, vap: 0 };
                     statsFunzioni[f].rda += o.valore;
                 });
+
+                // 3. Carico Pagato VAP
                 vaps.forEach(v => {
                     const f = v.funzione || 'N/D';
-                    if (!statsFunzioni[f]) statsFunzioni[f] = { rda: 0, vap: 0 };
+                    if (!statsFunzioni[f]) statsFunzioni[f] = { previsto: 0, rda: 0, vap: 0 };
                     statsFunzioni[f].vap += v.valore;
                 });
 
-                let htmlFunzioni = Object.keys(statsFunzioni).map(f => `
+                let htmlFunzioni = Object.keys(statsFunzioni).map(f => {
+                    const dt = statsFunzioni[f];
+                    const resRda = dt.previsto - dt.rda;
+                    return `
                     <tr>
                         <td><strong>${f}</strong></td>
-                        <td style="text-align: right;">${formattatoreValuta(statsFunzioni[f].rda)}</td>
-                        <td style="text-align: right; color: #b05a00;">${formattatoreValuta(statsFunzioni[f].vap)}</td>
-                    </tr>
-                `).join('');
+                        <td style="text-align: right;">${formattatoreValuta(dt.previsto)}</td>
+                        <td style="text-align: right;">${formattatoreValuta(dt.rda)}<br><span style="font-size:10px; color:${resRda < 0 ? '#d93025' : '#666'};">Res: ${formattatoreValuta(resRda)}</span></td>
+                        <td style="text-align: right; color: #b05a00;">${formattatoreValuta(dt.vap)}</td>
+                    </tr>`;
+                }).join('');
                 
                 statsHtml = `
                 <h3>Riepilogo Avanzamento Budget</h3>
-                <div class="info-grid" style="background: #e8f0fe; border: 1px solid #b6d4fe; margin-bottom: 10px;">
-                    <div class="info-row">
-                        <div class="info-cell"><strong>Budget Totale:</strong><br><span style="font-size: 14px; color: #0146bc;">${formattatoreValuta(ctr.valore)}</span></div>
-                        <div class="info-cell"><strong>Impegnato (RDA):</strong><br>${formattatoreValuta(impegnatoRda)}<br><span style="font-size: 10px; color: #666;">Residuo RDA: ${formattatoreValuta(ctr.valore - impegnatoRda)}</span></div>
-                        <div class="info-cell"><strong>Pagato (VAP):</strong><br>${formattatoreValuta(pagatoVap)}<br><span style="font-size: 10px; color: #666;">Residuo VAP: ${formattatoreValuta(ctr.valore - pagatoVap)}</span></div>
+                <div style="background: #fdfdfd; border: 1px solid #d2d2d7; border-radius: 6px; padding: 15px; margin-bottom: 25px;">
+                    <div style="display: table; width: 100%;">
+                        <div style="display: table-row;">
+                            <div style="display: table-cell; width: 33%; border-right: 1px dashed #d2d2d7; padding-right: 15px;">
+                                <span style="font-size: 11px; color: #666; text-transform: uppercase;">Budget Totale</span><br>
+                                <strong style="font-size: 16px; color: #0146bc;">${formattatoreValuta(ctr.valore)}</strong>
+                            </div>
+                            <div style="display: table-cell; width: 33%; border-right: 1px dashed #d2d2d7; padding: 0 15px;">
+                                <span style="font-size: 11px; color: #666; text-transform: uppercase;">Impegnato (RDA)</span><br>
+                                <strong style="font-size: 14px;">${formattatoreValuta(impegnatoRda)}</strong><br>
+                                <span style="font-size: 10px; color: #b05a00;">Residuo RDA: ${formattatoreValuta(ctr.valore - impegnatoRda)}</span>
+                            </div>
+                            <div style="display: table-cell; width: 33%; padding-left: 15px;">
+                                <span style="font-size: 11px; color: #666; text-transform: uppercase;">Pagato (VAP)</span><br>
+                                <strong style="font-size: 14px;">${formattatoreValuta(pagatoVap)}</strong><br>
+                                <span style="font-size: 10px; color: #b05a00;">Residuo VAP: ${formattatoreValuta(ctr.valore - pagatoVap)}</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                ${Object.keys(statsFunzioni).length > 0 ? `
-                <table class="table" style="width: 80%; margin-bottom: 20px;">
-                    <thead><tr><th>Quota Funzione</th><th style="text-align: right;">Impegnato (RDA)</th><th style="text-align: right;">Speso (VAP)</th></tr></thead>
-                    <tbody>${htmlFunzioni}</tbody>
-                </table>` : ''}`;
+                    ${Object.keys(statsFunzioni).length > 0 ? `
+                    <div style="margin-top: 15px; border-top: 1px solid #d2d2d7; padding-top: 15px;">
+                        <span style="display: block; font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Dettaglio Quote per Funzione</span>
+                        <table class="table" style="width: 100%; margin-bottom: 0; font-size: 11px;">
+                            <thead>
+                                <tr>
+                                    <th style="background-color:#e8f0fe; color:#0146bc;">Funzione</th>
+                                    <th style="background-color:#e8f0fe; color:#0146bc; text-align: right;">Previsto (Quota)</th>
+                                    <th style="background-color:#e8f0fe; color:#0146bc; text-align: right;">Impegnato (RDA)</th>
+                                    <th style="background-color:#e8f0fe; color:#0146bc; text-align: right;">Speso (VAP)</th>
+                                </tr>
+                            </thead>
+                            <tbody>${htmlFunzioni}</tbody>
+                        </table>
+                    </div>` : ''}
+                </div>`;
             }
 
             let html = `<!DOCTYPE html>
@@ -770,7 +809,7 @@
                     .info-cell { display: table-cell; padding: 6px 10px; }
                     .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: auto; }
                     .table tr { page-break-inside: avoid; page-break-after: auto; }
-                    .table th, .table td { border: 1px solid #d2d2d7; padding: 8px; text-align: left; vertical-align: top; }
+                    .table th, .table td { border: 1px solid #d2d2d7; padding: 8px; text-align: left; vertical-align: middle; }
                     .table th { background-color: #0146bc; color: white; }
                     .table tr:nth-child(even) { background-color: #f9f9f9; }
                     .totali { font-size: 14px; text-align: right; padding: 12px; background: #e8f0fe; font-weight: bold; color: #0146bc; border: 1px solid #b6d4fe; border-radius: 6px; page-break-inside: avoid; }

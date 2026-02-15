@@ -664,26 +664,38 @@
                 
                 // Raggruppamento statistiche per funzione
                 let statsFunzioni = {};
+                if (ctr.ripartizioni) {
+                    ctr.ripartizioni.forEach(r => {
+                        const f = r.funzione || 'N/D';
+                        if (!statsFunzioni[f]) statsFunzioni[f] = { previsto: 0, rda: 0, vap: 0 };
+                        statsFunzioni[f].previsto += (r.importo || 0);
+                    });
+                }
                 ordiniCtr.forEach(o => {
                     const f = o.funzione || 'N/D';
-                    if (!statsFunzioni[f]) statsFunzioni[f] = { rda: 0, vap: 0 };
+                    if (!statsFunzioni[f]) statsFunzioni[f] = { previsto: 0, rda: 0, vap: 0 };
                     statsFunzioni[f].rda += o.valore;
                 });
                 vapsCtr.forEach(v => {
                     const f = v.funzione || 'N/D';
-                    if (!statsFunzioni[f]) statsFunzioni[f] = { rda: 0, vap: 0 };
+                    if (!statsFunzioni[f]) statsFunzioni[f] = { previsto: 0, rda: 0, vap: 0 };
                     statsFunzioni[f].vap += v.valore;
                 });
 
-                let htmlFunzioni = Object.keys(statsFunzioni).map(f => `
+                let htmlFunzioni = Object.keys(statsFunzioni).map(f => {
+                    const dt = statsFunzioni[f];
+                    const resRda = dt.previsto - dt.rda;
+                    return `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(0,0,0,0.15); border-radius: 4px; margin-bottom: 0.25rem;">
-                        <strong style="color: #fff;">${f}</strong>
-                        <div style="text-align: right; font-size: 0.85rem;">
-                            <span style="margin-right: 15px;">Impegnato RDA: <span style="font-weight: 600;">${formattatoreValuta(statsFunzioni[f].rda)}</span></span>
-                            <span>Speso VAP: <span style="font-weight: 600; color: var(--brand-yellow);">${formattatoreValuta(statsFunzioni[f].vap)}</span></span>
+                        <strong style="color: #fff; flex: 1;">${f}</strong>
+                        <div style="display: flex; gap: 15px; text-align: right; font-size: 0.85rem; flex: 3; justify-content: flex-end;">
+                            <div style="width: 30%;">Previsto: <br><span style="font-weight: 600;">${formattatoreValuta(dt.previsto)}</span></div>
+                            <div style="width: 35%;">Impegnato RDA: <br><span style="font-weight: 600;">${formattatoreValuta(dt.rda)}</span><br><span style="font-size: 0.75rem; color: ${resRda < 0 ? '#ff8a80' : 'rgba(255,255,255,0.7)'};">Res: ${formattatoreValuta(resRda)}</span></div>
+                            <div style="width: 30%;">Speso VAP: <br><span style="font-weight: 600; color: var(--brand-yellow);">${formattatoreValuta(dt.vap)}</span></div>
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
                 
                 statsHtml = `
                 <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 6px; margin-top: 1rem; font-size: 0.95rem;">
@@ -870,6 +882,7 @@
                 </div>
                 <script>
                     window.onload = function() { 
+                        window.onafterprint = function() { window.close(); };
                         setTimeout(function() { window.print(); }, 500);
                     };
                 <\/script>

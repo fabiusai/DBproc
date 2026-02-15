@@ -714,6 +714,47 @@
             const vaps = appData.vap.filter(v => ordini.some(o => o.id === v.idOrdine));
             const speso = vaps.reduce((sum, v) => sum + v.valore, 0);
 
+            let statsHtml = '';
+            if (ctr.tipo === 'quadro') {
+                const impegnatoRda = ordini.reduce((sum, o) => sum + o.valore, 0);
+                const pagatoVap = vaps.reduce((sum, v) => sum + v.valore, 0);
+                
+                let statsFunzioni = {};
+                ordini.forEach(o => {
+                    const f = o.funzione || 'N/D';
+                    if (!statsFunzioni[f]) statsFunzioni[f] = { rda: 0, vap: 0 };
+                    statsFunzioni[f].rda += o.valore;
+                });
+                vaps.forEach(v => {
+                    const f = v.funzione || 'N/D';
+                    if (!statsFunzioni[f]) statsFunzioni[f] = { rda: 0, vap: 0 };
+                    statsFunzioni[f].vap += v.valore;
+                });
+
+                let htmlFunzioni = Object.keys(statsFunzioni).map(f => `
+                    <tr>
+                        <td><strong>${f}</strong></td>
+                        <td style="text-align: right;">${formattatoreValuta(statsFunzioni[f].rda)}</td>
+                        <td style="text-align: right; color: #b05a00;">${formattatoreValuta(statsFunzioni[f].vap)}</td>
+                    </tr>
+                `).join('');
+                
+                statsHtml = `
+                <h3>Riepilogo Avanzamento Budget</h3>
+                <div class="info-grid" style="background: #e8f0fe; border: 1px solid #b6d4fe; margin-bottom: 10px;">
+                    <div class="info-row">
+                        <div class="info-cell"><strong>Budget Totale:</strong><br><span style="font-size: 14px; color: #0146bc;">${formattatoreValuta(ctr.valore)}</span></div>
+                        <div class="info-cell"><strong>Impegnato (RDA):</strong><br>${formattatoreValuta(impegnatoRda)}<br><span style="font-size: 10px; color: #666;">Residuo RDA: ${formattatoreValuta(ctr.valore - impegnatoRda)}</span></div>
+                        <div class="info-cell"><strong>Pagato (VAP):</strong><br>${formattatoreValuta(pagatoVap)}<br><span style="font-size: 10px; color: #666;">Residuo VAP: ${formattatoreValuta(ctr.valore - pagatoVap)}</span></div>
+                    </div>
+                </div>
+                ${Object.keys(statsFunzioni).length > 0 ? `
+                <table class="table" style="width: 80%; margin-bottom: 20px;">
+                    <thead><tr><th>Quota Funzione</th><th style="text-align: right;">Impegnato (RDA)</th><th style="text-align: right;">Speso (VAP)</th></tr></thead>
+                    <tbody>${htmlFunzioni}</tbody>
+                </table>` : ''}`;
+            }
+
             let html = `<!DOCTYPE html>
             <html lang="it">
             <head>
@@ -726,7 +767,7 @@
                     h3 { color: #0146bc; font-size: 14px; margin-top: 25px; border-bottom: 1px solid #d2d2d7; padding-bottom: 4px; }
                     .info-grid { display: table; width: 100%; margin-bottom: 20px; background: #f5f5f7; padding: 15px; border-radius: 6px; }
                     .info-row { display: table-row; }
-                    .info-cell { display: table-cell; padding: 6px 10px; width: 50%; }
+                    .info-cell { display: table-cell; padding: 6px 10px; }
                     .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: auto; }
                     .table tr { page-break-inside: avoid; page-break-after: auto; }
                     .table th, .table td { border: 1px solid #d2d2d7; padding: 8px; text-align: left; vertical-align: top; }
@@ -742,8 +783,8 @@
                 <h1>Dossier Riassuntivo Contratto</h1>
                 <div class="info-grid">
                     <div class="info-row">
-                        <div class="info-cell"><strong>Fornitore:</strong> ${ctr.fornitore || 'N/D'}</div>
-                        <div class="info-cell"><strong>Numero Identificativo:</strong> ${ctr.numero || 'N/D'}</div>
+                        <div class="info-cell" style="width: 50%;"><strong>Fornitore:</strong> ${ctr.fornitore || 'N/D'}</div>
+                        <div class="info-cell" style="width: 50%;"><strong>Numero Identificativo:</strong> ${ctr.numero || 'N/D'}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-cell"><strong>Tipologia:</strong> ${ctr.tipo.toUpperCase()}</div>
@@ -754,6 +795,7 @@
                         <div class="info-cell"><strong>Note:</strong> ${ctr.note || 'Nessuna'}</div>
                     </div>
                 </div>
+                ${statsHtml}
                 
                 <h3>Dettaglio Ordini e Pagamenti (VAP)</h3>
                 <table class="table">

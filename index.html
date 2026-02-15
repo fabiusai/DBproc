@@ -655,12 +655,105 @@
             contrattoInGestioneId = id; const ctr = appData.contratti.find(c => c.id === id); if(!ctr) return;
             let label = ctr.tipo === 'quadro' ? 'Contratto Quadro' : (ctr.tipo === 'diretta' ? 'Assegnazione Diretta' : 'Terze Funzioni');
             
-            document.getElementById('spese-header').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span><h3 style="margin-top:0.5rem;">${ctr.fornitore || 'Bozza'}</h3><p><strong>N°:</strong> ${ctr.numero || 'N/D'} | <strong>Validità:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)}</p></div><div style="text-align:right;"><span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p>Budget Totale</p></div></div>${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
+            document.getElementById('spese-header').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span><h3 style="margin-top:0.5rem;">${ctr.fornitore || 'Bozza'}</h3><p><strong>N°:</strong> ${ctr.numero || 'N/D'} | <strong>Validità:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)}</p></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><div style="text-align:right;"><span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p style="margin:0;">Budget Totale</p></div><button class="btn btn-yellow btn-small" onclick="esportaPdfContratto('${ctr.id}')">📄 Esporta PDF</button></div></div>${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
             
             const content = document.getElementById('spese-content');
             if (ctr.tipo === 'terzi') { content.innerHTML = `<div class="empty-state"><h4>Nessuna RDA necessaria</h4><p>Contratto gestito da ${ctr.funzioneGestore}.</p></div>`; } 
             else { content.innerHTML = `<div class="box-header"><div><h4>Elenco Ordini (RDA/ODA)</h4></div><button class="btn btn-yellow btn-small" onclick="predisponiRdaNuova()">+ Nuova RDA</button></div><div id="lista-ordini"></div>`; renderOrdini(ctr.id, ctr.tipo); }
             switchView('gestione-spese');
+        }
+
+        function esportaPdfContratto(id) {
+            const ctr = appData.contratti.find(c => c.id === id); if(!ctr) return;
+            const ordini = appData.ordini.filter(o => o.idContratto === id);
+            const vaps = appData.vap.filter(v => ordini.some(o => o.id === v.idOrdine));
+            const speso = vaps.reduce((sum, v) => sum + v.valore, 0);
+
+            let html = `<!DOCTYPE html>
+            <html lang="it">
+            <head>
+                <meta charset="UTF-8">
+                <title>Report Contratto ${ctr.numero || 'ND'}</title>
+                <style>
+                    @page { size: A4; margin: 15mm; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 12px; }
+                    h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin-bottom: 15px; font-size: 20px; }
+                    h3 { color: #0146bc; font-size: 14px; margin-top: 25px; border-bottom: 1px solid #d2d2d7; padding-bottom: 4px; }
+                    .info-grid { display: table; width: 100%; margin-bottom: 20px; background: #f5f5f7; padding: 15px; border-radius: 6px; }
+                    .info-row { display: table-row; }
+                    .info-cell { display: table-cell; padding: 6px 10px; width: 50%; }
+                    .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: auto; }
+                    .table tr { page-break-inside: avoid; page-break-after: auto; }
+                    .table th, .table td { border: 1px solid #d2d2d7; padding: 8px; text-align: left; vertical-align: top; }
+                    .table th { background-color: #0146bc; color: white; }
+                    .table tr:nth-child(even) { background-color: #f9f9f9; }
+                    .totali { font-size: 14px; text-align: right; padding: 12px; background: #e8f0fe; font-weight: bold; color: #0146bc; border: 1px solid #b6d4fe; border-radius: 6px; page-break-inside: avoid; }
+                    .vap-item { padding: 4px 0; border-bottom: 1px dotted #ccc; }
+                    .vap-item:last-child { border-bottom: none; }
+                    .da-liquidare { color: #d93025; font-size: 11px; margin-top: 4px; }
+                </style>
+            </head>
+            <body>
+                <h1>Dossier Riassuntivo Contratto</h1>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <div class="info-cell"><strong>Fornitore:</strong> ${ctr.fornitore || 'N/D'}</div>
+                        <div class="info-cell"><strong>Numero Identificativo:</strong> ${ctr.numero || 'N/D'}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-cell"><strong>Tipologia:</strong> ${ctr.tipo.toUpperCase()}</div>
+                        <div class="info-cell"><strong>Periodo:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-cell"><strong>Valore Totale:</strong> ${formattatoreValuta(ctr.valore)}</div>
+                        <div class="info-cell"><strong>Note:</strong> ${ctr.note || 'Nessuna'}</div>
+                    </div>
+                </div>
+                
+                <h3>Dettaglio Ordini e Pagamenti (VAP)</h3>
+                <table class="table">
+                    <thead><tr><th style="width:25%;">Ordine</th><th style="width:15%;">Data</th><th style="width:20%;">Valore</th><th style="width:40%;">Dettaglio VAP</th></tr></thead>
+                    <tbody>`;
+            
+            if(ordini.length === 0) {
+                html += `<tr><td colspan="4" style="text-align:center;">Nessun ordine registrato.</td></tr>`;
+            } else {
+                ordini.forEach(o => {
+                    const ordVaps = vaps.filter(v => v.idOrdine === o.id);
+                    const spesoOrd = ordVaps.reduce((acc, v) => acc + v.valore, 0);
+                    const residuoOrd = o.valore - spesoOrd;
+                    let vapsList = ordVaps.length > 0 ? ordVaps.map(v => `<div class="vap-item">&bull; VAP ${v.num||'Semp.'} del ${formattatoreDataIT(v.data||o.dataSemplice)}: <strong>${formattatoreValuta(v.valore)}</strong></div>`).join('') : '<span style="color:#86868b;">Nessun pagamento</span>';
+                    
+                    if (residuoOrd > 0) { vapsList += `<div class="da-liquidare">Residuo da liquidare: ${formattatoreValuta(residuoOrd)}</div>`; }
+
+                    html += `<tr>
+                        <td><strong>${o.rdaNum ? 'RDA: '+o.rdaNum : 'RDA: '+o.funzione}</strong><br><small style="color:#666;">${o.odaNum ? 'ODA: '+o.odaNum : ''}</small></td>
+                        <td>${formattatoreDataIT(o.rdaData || o.dataSemplice)}</td>
+                        <td><strong>${formattatoreValuta(o.valore)}</strong></td>
+                        <td>${vapsList}</td>
+                    </tr>`;
+                });
+            }
+            
+            html += `</tbody></table>
+                <div class="totali">
+                    Totale Impegnato: ${formattatoreValuta(ctr.valore)}<br>
+                    Totale Liquidato (VAP): ${formattatoreValuta(speso)}<br>
+                    <hr style="border-top:1px solid #0146bc; margin:8px 0;">
+                    Residuo Disponibile: ${formattatoreValuta(ctr.valore - speso)}
+                </div>
+                <script>
+                    window.onload = function() { 
+                        setTimeout(function() { window.print(); }, 500);
+                    };
+                <\/script>
+            </body>
+            </html>`;
+
+            let printWin = window.open('', '_blank');
+            printWin.document.open();
+            printWin.document.write(html);
+            printWin.document.close();
         }
 
         function renderOrdini(idContratto, tipoContratto) {

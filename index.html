@@ -147,7 +147,7 @@
                         <div class="input-group"><label>Numero Identificativo</label><input type="text" id="cq-numero"></div>
                         <div class="input-group"><label>Data Inizio</label><input type="date" id="cq-inizio"></div>
                         <div class="input-group"><label>Data Fine</label><input type="date" id="cq-fine"></div>
-                        <div class="input-group"><label>Valore (Netto €)</label><input type="number" step="0.01" id="cq-valore" oninput="calcolaQuadratura()"></div>
+                        <div class="input-group"><label>Valore (Netto €)</label><input type="text" inputmode="decimal" id="cq-valore" placeholder="Es. 31.000,02" oninput="calcolaQuadratura()"></div>
                         <div class="input-group" style="grid-column: 1 / -1;"><label>Note</label><textarea id="cq-note" rows="2"></textarea></div>
                     </div>
                     <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
@@ -166,7 +166,7 @@
                         <div class="input-group"><label>Numero Identificativo</label><input type="text" id="cd-numero"></div>
                         <div class="input-group"><label>Data Inizio</label><input type="date" id="cd-inizio"></div>
                         <div class="input-group"><label>Data Fine</label><input type="date" id="cd-fine"></div>
-                        <div class="input-group"><label>Valore (Netto €)</label><input type="number" step="0.01" id="cd-valore"></div>
+                        <div class="input-group"><label>Valore (Netto €)</label><input type="text" inputmode="decimal" id="cd-valore" placeholder="Es. 31.000,02"></div>
                         <div class="input-group" style="grid-column: 1 / -1;"><label>Note</label><textarea id="cd-note" rows="2"></textarea></div>
                     </div>
                 </div>
@@ -177,7 +177,7 @@
                         <div class="input-group"><label>Funzione Gestore</label><input type="text" id="ct-funzione"></div>
                         <div class="input-group"><label>Data Inizio</label><input type="date" id="ct-inizio"></div>
                         <div class="input-group"><label>Data Fine</label><input type="date" id="ct-fine"></div>
-                        <div class="input-group"><label>Valore Imputato (Netto €)</label><input type="number" step="0.01" id="ct-valore"></div>
+                        <div class="input-group"><label>Valore Imputato (Netto €)</label><input type="text" inputmode="decimal" id="ct-valore" placeholder="Es. 31.000,02"></div>
                         <div class="input-group" style="grid-column: 1 / -1;"><label>Note</label><textarea id="ct-note" rows="2"></textarea></div>
                     </div>
                 </div>
@@ -212,7 +212,7 @@
                 <div class="input-group"><label>Data RDA</label><input type="date" id="rda-data"></div>
                 <div class="input-group"><label>Numero ODA</label><input type="text" id="oda-num"></div>
                 <div class="input-group"><label>Data ODA</label><input type="date" id="oda-data"></div>
-                <div class="input-group"><label>Valore Ordine (€)</label><input type="number" step="0.01" id="rda-valore"></div>
+                <div class="input-group"><label>Valore Ordine (€)</label><input type="text" inputmode="decimal" id="rda-valore" placeholder="Es. 31.000,02"></div>
             </div>
             <div style="text-align: right; margin-top: 1rem;">
                 <button class="btn btn-yellow" id="btn-salva-rda" onclick="salvaRda(this)">Salva Ordine</button>
@@ -232,7 +232,7 @@
             <div class="form-grid">
                 <div class="input-group"><label>Numero VAP</label><input type="text" id="vap-num"></div>
                 <div class="input-group"><label>Data VAP</label><input type="date" id="vap-data"></div>
-                <div class="input-group"><label>Importo (€)</label><input type="number" step="0.01" id="vap-valore"></div>
+                <div class="input-group"><label>Importo (€)</label><input type="text" inputmode="decimal" id="vap-valore" placeholder="Es. 31.000,02"></div>
                 <div class="input-group"><label>Anno di Esercizio</label><input type="number" id="vap-anno" placeholder="Es. 2026"></div>
                 <div class="input-group" id="vap-funzione-container"><label>Funzione</label><input type="text" id="vap-funzione" placeholder="Es. IT"></div>
             </div>
@@ -249,7 +249,7 @@
 
     <script>
         /* --- MOTORE DATI E STATO GLOBALE --- */
-        const DB_KEY = "contratti_db_v4"; 
+        const DB_KEY = "contratti_db_v5"; 
         let appData = { contratti: [], ordini: [], vap: [] };
         
         let tipoContrattoAttivo = 'quadro';
@@ -263,6 +263,20 @@
             if(savedData) appData = JSON.parse(savedData);
             aggiungiRigaBudget(); calcolaQuadratura(); renderDashboard();
         };
+
+        /* --- FUNZIONE CHIAVE: TRADUTTORE IMPORTI --- */
+        // Trasforma "31.000,02" in "31000.02" per Javascript
+        function parseImporto(valoreStr) {
+            if (!valoreStr) return 0;
+            // Assicuriamoci che sia una stringa
+            let pulito = String(valoreStr);
+            // Rimuovi eventuali punti delle migliaia
+            pulito = pulito.replace(/\./g, '');
+            // Cambia la virgola decimale in punto
+            pulito = pulito.replace(',', '.');
+            // Converte in numero, se fallisce restituisce 0
+            return parseFloat(pulito) || 0;
+        }
 
         /* --- DATABASE --- */
         function salvaDati() { localStorage.setItem(DB_KEY, JSON.stringify(appData)); }
@@ -377,34 +391,37 @@
             if (ctr.tipo === 'quadro') {
                 document.getElementById('cq-fornitore').value = ctr.fornitore || ''; document.getElementById('cq-numero').value = ctr.numero || '';
                 document.getElementById('cq-inizio').value = ctr.dataInizio || ''; document.getElementById('cq-fine').value = ctr.dataFine || '';
-                document.getElementById('cq-valore').value = ctr.valore || ''; document.getElementById('cq-note').value = ctr.note || '';
+                document.getElementById('cq-valore').value = String(ctr.valore).replace('.', ','); document.getElementById('cq-note').value = ctr.note || '';
                 const containerRip = document.getElementById('container-ripartizioni'); containerRip.innerHTML = '';
                 if(ctr.ripartizioni && ctr.ripartizioni.length > 0) { ctr.ripartizioni.forEach(rip => aggiungiRigaBudgetConDati(rip.funzione, rip.anno, rip.importo)); } else { aggiungiRigaBudget(); }
                 calcolaQuadratura();
             } else if (ctr.tipo === 'diretta') {
                 document.getElementById('cd-fornitore').value = ctr.fornitore || ''; document.getElementById('cd-numero').value = ctr.numero || '';
                 document.getElementById('cd-inizio').value = ctr.dataInizio || ''; document.getElementById('cd-fine').value = ctr.dataFine || '';
-                document.getElementById('cd-valore').value = ctr.valore || ''; document.getElementById('cd-note').value = ctr.note || '';
+                document.getElementById('cd-valore').value = String(ctr.valore).replace('.', ','); document.getElementById('cd-note').value = ctr.note || '';
             } else if (ctr.tipo === 'terzi') {
                 document.getElementById('ct-fornitore').value = ctr.fornitore || ''; document.getElementById('ct-funzione').value = ctr.funzioneGestore || '';
                 document.getElementById('ct-inizio').value = ctr.dataInizio || ''; document.getElementById('ct-fine').value = ctr.dataFine || '';
-                document.getElementById('ct-valore').value = ctr.valore || ''; document.getElementById('ct-note').value = ctr.note || '';
+                document.getElementById('ct-valore').value = String(ctr.valore).replace('.', ','); document.getElementById('ct-note').value = ctr.note || '';
             }
             switchView('contratti', document.querySelectorAll('nav button')[1]);
         }
 
-        // AGGIUNTO step="0.01" nella generazione dinamica della riga di budget
+        // Tipo input="text" anche qui
         function aggiungiRigaBudgetConDati(funz, anno, importo) {
             const container = document.getElementById('container-ripartizioni');
             const riga = document.createElement('div'); riga.className = 'budget-row';
-            riga.innerHTML = `<input type="text" class="b-funzione" style="flex: 2;" value="${funz||''}"><input type="number" class="b-anno" style="flex: 1;" value="${anno||''}"><input type="number" step="0.01" class="b-importo" oninput="calcolaQuadratura()" style="flex: 2;" value="${importo||''}"><button onclick="this.parentElement.remove(); calcolaQuadratura()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted);">✕</button>`;
+            const valFormattato = importo ? String(importo).replace('.', ',') : '';
+            riga.innerHTML = `<input type="text" class="b-funzione" style="flex: 2;" value="${funz||''}"><input type="number" class="b-anno" style="flex: 1;" value="${anno||''}"><input type="text" inputmode="decimal" class="b-importo" oninput="calcolaQuadratura()" style="flex: 2;" value="${valFormattato}" placeholder="Es. 31000,00"><button onclick="this.parentElement.remove(); calcolaQuadratura()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted);">✕</button>`;
             container.appendChild(riga);
         }
         function aggiungiRigaBudget() { aggiungiRigaBudgetConDati('','',''); }
+
         function calcolaQuadratura() {
             if(tipoContrattoAttivo !== 'quadro') { document.getElementById('btn-salva-contratto').disabled = false; return; }
-            const totale = parseFloat(document.getElementById('cq-valore').value) || 0; let somma = 0;
-            document.querySelectorAll('.b-importo').forEach(i => somma += parseFloat(i.value) || 0);
+            const totale = parseImporto(document.getElementById('cq-valore').value); 
+            let somma = 0;
+            document.querySelectorAll('.b-importo').forEach(i => somma += parseImporto(i.value));
             const badge = document.getElementById('cq-status-quadratura'); const btn = document.getElementById('btn-salva-contratto');
             if (totale > 0 && Math.abs(totale - somma) < 0.01) { badge.textContent = "Budget Quadrato"; badge.style.background = "#e6f4ea"; badge.style.color = "#137333"; btn.disabled = false; }
             else { badge.textContent = `Scostamento: ${(totale - somma).toFixed(2)} €`; badge.style.background = "#ffebeb"; badge.style.color = "#d93025"; btn.disabled = true; }
@@ -416,16 +433,16 @@
                 if (tipoContrattoAttivo === 'quadro') {
                     ctr.fornitore = document.getElementById('cq-fornitore').value; ctr.numero = document.getElementById('cq-numero').value;
                     ctr.dataInizio = document.getElementById('cq-inizio').value; ctr.dataFine = document.getElementById('cq-fine').value;
-                    ctr.valore = parseFloat(document.getElementById('cq-valore').value) || 0; ctr.note = document.getElementById('cq-note').value;
-                    ctr.ripartizioni = []; document.querySelectorAll('.budget-row').forEach(row => { ctr.ripartizioni.push({ funzione: row.querySelector('.b-funzione').value, anno: row.querySelector('.b-anno').value, importo: parseFloat(row.querySelector('.b-importo').value)||0 }); });
+                    ctr.valore = parseImporto(document.getElementById('cq-valore').value); ctr.note = document.getElementById('cq-note').value;
+                    ctr.ripartizioni = []; document.querySelectorAll('.budget-row').forEach(row => { ctr.ripartizioni.push({ funzione: row.querySelector('.b-funzione').value, anno: row.querySelector('.b-anno').value, importo: parseImporto(row.querySelector('.b-importo').value) }); });
                 } else if (tipoContrattoAttivo === 'diretta') {
                     ctr.fornitore = document.getElementById('cd-fornitore').value; ctr.numero = document.getElementById('cd-numero').value;
                     ctr.dataInizio = document.getElementById('cd-inizio').value; ctr.dataFine = document.getElementById('cd-fine').value;
-                    ctr.valore = parseFloat(document.getElementById('cd-valore').value) || 0; ctr.note = document.getElementById('cd-note').value;
+                    ctr.valore = parseImporto(document.getElementById('cd-valore').value); ctr.note = document.getElementById('cd-note').value;
                 } else if (tipoContrattoAttivo === 'terzi') {
                     ctr.fornitore = document.getElementById('ct-fornitore').value; ctr.numero = "N/A"; ctr.funzioneGestore = document.getElementById('ct-funzione').value;
                     ctr.dataInizio = document.getElementById('ct-inizio').value; ctr.dataFine = document.getElementById('ct-fine').value;
-                    ctr.valore = parseFloat(document.getElementById('ct-valore').value) || 0; ctr.note = document.getElementById('ct-note').value;
+                    ctr.valore = parseImporto(document.getElementById('ct-valore').value); ctr.note = document.getElementById('ct-note').value;
                 }
                 if (editContrattoId) { const idx = appData.contratti.findIndex(c => c.id === editContrattoId); if(idx !== -1) appData.contratti[idx] = ctr; } 
                 else { appData.contratti.push(ctr); }
@@ -510,14 +527,14 @@
             editOrdineId = id; const ord = appData.ordini.find(o => o.id === id); if(!ord) return;
             document.getElementById('rda-num').value = ord.rdaNum || ''; document.getElementById('rda-data').value = ord.rdaData || '';
             document.getElementById('oda-num').value = ord.odaNum || ''; document.getElementById('oda-data').value = ord.odaData || '';
-            document.getElementById('rda-valore').value = ord.valore || '';
+            document.getElementById('rda-valore').value = String(ord.valore).replace('.', ',');
             document.getElementById('titolo-modale-rda').innerText = "Modifica Ordine"; document.getElementById('btn-salva-rda').innerText = "Aggiorna Ordine";
             apriModale('modal-rda');
         }
 
         function salvaRda(btn) {
             withFeedback(btn, "Salvataggio...", "Salvato", editOrdineId ? "Aggiorna Ordine" : "Salva Ordine", () => {
-                let ord = { id: editOrdineId ? editOrdineId : "ORD-" + Date.now(), idContratto: contrattoInGestioneId, rdaNum: document.getElementById('rda-num').value, rdaData: document.getElementById('rda-data').value, odaNum: document.getElementById('oda-num').value, odaData: document.getElementById('oda-data').value, valore: parseFloat(document.getElementById('rda-valore').value) || 0 };
+                let ord = { id: editOrdineId ? editOrdineId : "ORD-" + Date.now(), idContratto: contrattoInGestioneId, rdaNum: document.getElementById('rda-num').value, rdaData: document.getElementById('rda-data').value, odaNum: document.getElementById('oda-num').value, odaData: document.getElementById('oda-data').value, valore: parseImporto(document.getElementById('rda-valore').value) };
                 if(editOrdineId) { const idx = appData.ordini.findIndex(o => o.id === editOrdineId); if(idx !== -1) appData.ordini[idx] = ord; }
                 else { appData.ordini.push(ord); }
                 salvaDati(); chiudiModale('modal-rda'); renderOrdini(contrattoInGestioneId, appData.contratti.find(c=>c.id===contrattoInGestioneId).tipo);
@@ -547,7 +564,7 @@
             document.getElementById('vap-id-ordine').value = v.idOrdine; document.getElementById('vap-ordine-ref').innerText = `Riferimento: RDA ${ord.rdaNum}`;
             document.getElementById('vap-funzione-container').style.display = ctr.tipo === 'quadro' ? 'block' : 'none';
             document.getElementById('vap-num').value = v.num || ''; document.getElementById('vap-data').value = v.data || '';
-            document.getElementById('vap-valore').value = v.valore || ''; document.getElementById('vap-anno').value = v.anno || '';
+            document.getElementById('vap-valore').value = String(v.valore).replace('.', ','); document.getElementById('vap-anno').value = v.anno || '';
             document.getElementById('vap-funzione').value = v.funzione || ''; document.getElementById('vap-assestamento').checked = v.assestamento || false;
             document.getElementById('titolo-modale-vap').innerText = "Modifica Pagamento (VAP)"; document.getElementById('btn-salva-vap').innerText = "Aggiorna VAP";
             apriModale('modal-vap');
@@ -555,7 +572,7 @@
 
         function salvaVap(btn) {
             withFeedback(btn, "Salvataggio...", "Fatto!", editVapId ? "Aggiorna VAP" : "Registra Pagamento", () => {
-                let vap = { id: editVapId ? editVapId : "VAP-" + Date.now(), idOrdine: document.getElementById('vap-id-ordine').value, num: document.getElementById('vap-num').value, data: document.getElementById('vap-data').value, valore: parseFloat(document.getElementById('vap-valore').value) || 0, anno: document.getElementById('vap-anno').value, funzione: document.getElementById('vap-funzione').value, assestamento: document.getElementById('vap-assestamento').checked };
+                let vap = { id: editVapId ? editVapId : "VAP-" + Date.now(), idOrdine: document.getElementById('vap-id-ordine').value, num: document.getElementById('vap-num').value, data: document.getElementById('vap-data').value, valore: parseImporto(document.getElementById('vap-valore').value), anno: document.getElementById('vap-anno').value, funzione: document.getElementById('vap-funzione').value, assestamento: document.getElementById('vap-assestamento').checked };
                 if(editVapId) { const idx = appData.vap.findIndex(v => v.id === editVapId); if(idx !== -1) appData.vap[idx] = vap; }
                 else { appData.vap.push(vap); }
                 salvaDati(); chiudiModale('modal-vap'); renderOrdini(contrattoInGestioneId, appData.contratti.find(c=>c.id===contrattoInGestioneId).tipo);

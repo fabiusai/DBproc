@@ -249,7 +249,7 @@
 
     <script>
         /* --- MOTORE DATI E STATO GLOBALE --- */
-        const DB_KEY = "contratti_db_v5"; 
+        const DB_KEY = "contratti_db_v6"; 
         let appData = { contratti: [], ordini: [], vap: [] };
         
         let tipoContrattoAttivo = 'quadro';
@@ -264,23 +264,29 @@
             aggiungiRigaBudget(); calcolaQuadratura(); renderDashboard();
         };
 
-        /* --- FUNZIONE CHIAVE: TRADUTTORE IMPORTI --- */
-        // Trasforma "31.000,02" in "31000.02" per Javascript
+        /* --- FORMATTATORI: DATE E IMPORTI --- */
+        
+        // Nuova Funzione per formattare la data per esteso in Italiano
+        function formattatoreDataIT(dataISO) {
+            if (!dataISO) return '-';
+            const dataObj = new Date(dataISO);
+            if (isNaN(dataObj.getTime())) return dataISO; // Ritorna l'originale se non è una data valida
+            return dataObj.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        // Trasforma stringhe italiane in numeri (31.000,02 -> 31000.02)
         function parseImporto(valoreStr) {
             if (!valoreStr) return 0;
-            // Assicuriamoci che sia una stringa
-            let pulito = String(valoreStr);
-            // Rimuovi eventuali punti delle migliaia
-            pulito = pulito.replace(/\./g, '');
-            // Cambia la virgola decimale in punto
-            pulito = pulito.replace(',', '.');
-            // Converte in numero, se fallisce restituisce 0
+            let pulito = String(valoreStr).replace(/\./g, '').replace(',', '.');
             return parseFloat(pulito) || 0;
+        }
+
+        function formattatoreValuta(num) { 
+            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(num || 0); 
         }
 
         /* --- DATABASE --- */
         function salvaDati() { localStorage.setItem(DB_KEY, JSON.stringify(appData)); }
-        function formattatoreValuta(num) { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(num || 0); }
         function cancellaDati() { if(confirm("Sei sicuro di voler formattare il database?")) { localStorage.clear(); location.reload(); } }
         
         function exportData(btn) {
@@ -359,11 +365,12 @@
                 let badge = c.tipo === 'quadro' ? 'badge-quadro' : (c.tipo === 'diretta' ? 'badge-diretta' : 'badge-terzi');
                 let label = c.tipo === 'quadro' ? 'Quadro' : (c.tipo === 'diretta' ? 'Diretta' : 'Terze Funzioni');
                 const card = document.createElement('div'); card.className = 'contract-card';
+                // Utilizzo formattatoreDataIT qui
                 card.innerHTML = `
                     <div class="card-info">
                         <span class="badge-tipo ${badge}">${label}</span>
                         <h4>${c.fornitore||'-'}</h4>
-                        <p><strong>N°:</strong> ${c.numero||'-'} | <strong>Periodo:</strong> ${c.dataInizio||'-'} / ${c.dataFine||'-'}</p>
+                        <p><strong>N°:</strong> ${c.numero||'-'} | <strong>Periodo:</strong> ${formattatoreDataIT(c.dataInizio)} / ${formattatoreDataIT(c.dataFine)}</p>
                     </div>
                     <div class="card-actions">
                         <span class="valore">${formattatoreValuta(c.valore)}</span>
@@ -407,7 +414,6 @@
             switchView('contratti', document.querySelectorAll('nav button')[1]);
         }
 
-        // Tipo input="text" anche qui
         function aggiungiRigaBudgetConDati(funz, anno, importo) {
             const container = document.getElementById('container-ripartizioni');
             const riga = document.createElement('div'); riga.className = 'budget-row';
@@ -462,7 +468,10 @@
         function apriDettaglioContratto(id) {
             contrattoInGestioneId = id; const ctr = appData.contratti.find(c => c.id === id); if(!ctr) return;
             let label = ctr.tipo === 'quadro' ? 'Contratto Quadro' : (ctr.tipo === 'diretta' ? 'Assegnazione Diretta' : 'Terze Funzioni');
-            document.getElementById('spese-header').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span><h3 style="margin-top:0.5rem;">${ctr.fornitore}</h3><p><strong>N°:</strong> ${ctr.numero} | <strong>Validità:</strong> ${ctr.dataInizio} / ${ctr.dataFine}</p></div><div style="text-align:right;"><span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p>Budget Totale</p></div></div>${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
+            
+            // Utilizzo formattatoreDataIT qui per l'header del dettaglio
+            document.getElementById('spese-header').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span><h3 style="margin-top:0.5rem;">${ctr.fornitore}</h3><p><strong>N°:</strong> ${ctr.numero} | <strong>Validità:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)}</p></div><div style="text-align:right;"><span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p>Budget Totale</p></div></div>${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
+            
             const content = document.getElementById('spese-content');
             if (ctr.tipo === 'terzi') { content.innerHTML = `<div class="empty-state"><h4>Nessuna RDA necessaria</h4><p>Contratto gestito da ${ctr.funzioneGestore}.</p></div>`; } 
             else { content.innerHTML = `<div class="box-header"><div><h4>Elenco Ordini (RDA/ODA)</h4></div><button class="btn btn-yellow btn-small" onclick="predisponiRdaNuova()">+ Nuova RDA</button></div><div id="lista-ordini"></div>`; renderOrdini(ctr.id, ctr.tipo); }
@@ -478,18 +487,20 @@
                 const vaps = appData.vap.filter(v => v.idOrdine === o.id);
                 let totaleVap = 0; vaps.forEach(v => totaleVap += v.valore); let residuo = o.valore - totaleVap;
 
+                // Utilizzo formattatoreDataIT qui per i VAP
                 let vapHtml = vaps.length === 0 ? `<p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Nessun VAP registrato.</p>` : vaps.map(v => 
                     `<div class="vap-row">
                         <div>
                             <button class="btn-icon" onclick="caricaVapPerModifica('${v.id}')" title="Modifica VAP">✏️</button>
                             <button class="btn-icon btn-icon-danger" onclick="eliminaVap('${v.id}')" title="Elimina VAP">🗑️</button>
-                            <strong>VAP:</strong> ${v.num} | ${v.data} | Anno: ${v.anno} ${v.funzione ? `| Funz: ${v.funzione}` : ''} ${v.assestamento ? '<span class="vap-assestamento">Assestamento</span>' : ''}
+                            <strong>VAP:</strong> ${v.num} | ${formattatoreDataIT(v.data)} | Anno: ${v.anno} ${v.funzione ? `| Funz: ${v.funzione}` : ''} ${v.assestamento ? '<span class="vap-assestamento">Assestamento</span>' : ''}
                         </div>
                         <strong style="color:var(--brand-blue);">${formattatoreValuta(v.valore)}</strong>
                     </div>`
                 ).join('');
 
                 const card = document.createElement('div'); card.className = 'ordine-card';
+                // Utilizzo formattatoreDataIT qui per l'header RDA
                 card.innerHTML = `
                     <div class="ordine-header">
                         <div>
@@ -498,7 +509,7 @@
                                 <button class="btn-icon btn-icon-danger" onclick="eliminaRda('${o.id}')" title="Elimina RDA">🗑️</button>
                                 RDA: ${o.rdaNum||'-'} (ODA: ${o.odaNum||'-'})
                             </h4>
-                            <span style="font-size:0.85rem; color:var(--text-muted); margin-left: 4rem;">Data: ${o.rdaData||'-'} | Data ODA: ${o.odaData||'-'}</span>
+                            <span style="font-size:0.85rem; color:var(--text-muted); margin-left: 4rem;">Data: ${formattatoreDataIT(o.rdaData)} | Data ODA: ${formattatoreDataIT(o.odaData)}</span>
                         </div>
                         <div style="text-align:right;">
                             <span style="display:block; font-weight:600; font-size:1.1rem;">Valore: ${formattatoreValuta(o.valore)}</span>

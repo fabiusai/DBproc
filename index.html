@@ -373,8 +373,31 @@
 
         /* --- CONFIGURAZIONE --- */
         function salvaConfigurazione() {
-            appData.config.miaFunzione = document.getElementById('cfg-mia-funzione').value.trim();
+            const vecchiaMiaFunzione = appData.config.miaFunzione;
+            const nuovaMiaFunzione = document.getElementById('cfg-mia-funzione').value.trim();
+            
+            appData.config.miaFunzione = nuovaMiaFunzione;
             appData.config.altreFunzioni = document.getElementById('cfg-altre-funzioni').value.split(',').map(s => s.trim()).filter(s => s !== '');
+            
+            if (vecchiaMiaFunzione && vecchiaMiaFunzione !== nuovaMiaFunzione) {
+                appData.contratti.forEach(c => {
+                    if (c.funzioneGestore === vecchiaMiaFunzione) c.funzioneGestore = nuovaMiaFunzione;
+                    if (c.ripartizioni) {
+                        c.ripartizioni.forEach(r => {
+                            if (r.funzione === vecchiaMiaFunzione) r.funzione = nuovaMiaFunzione;
+                        });
+                    }
+                });
+                
+                appData.ordini.forEach(o => {
+                    if (o.funzione === vecchiaMiaFunzione) o.funzione = nuovaMiaFunzione;
+                });
+                
+                appData.vap.forEach(v => {
+                    if (v.funzione === vecchiaMiaFunzione) v.funzione = nuovaMiaFunzione;
+                });
+            }
+            
             salvaDati();
         }
 

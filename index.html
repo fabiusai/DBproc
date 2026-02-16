@@ -558,7 +558,7 @@
             const container = document.getElementById('lista-contratti-container');
             container.innerHTML = ''; 
             const search = document.getElementById('search-contratti').value.toLowerCase();
-            let filtrati = [...appData.contratti].sort((a, b) => new Date(b.dataCreazione) - new Date(a.dataCreazione)).filter(c => `${c.fornitore||''} ${c.numero||''} ${c.tipo||''} ${c.funzioneGestore||''}`.toLowerCase().includes(search));
+            let filtrati = [...appData.contratti].sort((a, b) => new Date(b.dataFine) - new Date(a.dataFine)).filter(c => `${c.fornitore||''} ${c.numero||''} ${c.tipo||''} ${c.funzioneGestore||''}`.toLowerCase().includes(search));
             
             if(filtrati.length === 0) { container.innerHTML = `<div class="empty-state">Nessun contratto trovato.</div>`; return; }
 

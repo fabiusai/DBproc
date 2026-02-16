@@ -253,7 +253,7 @@
                 <h3 id="titolo-modale-rda">Aggiungi Ordine (RDA / ODA)</h3>
                 <button class="btn-close" onclick="chiudiModale('modal-rda')">&times;</button>
             </div>
-            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--brand-blue); display: none;" id="rda-altre-avviso">Modalità semplificata per funzioni aggiuntive.</p>
+            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--brand-blue); display: none;" id="rda-altre-avviso">Modalità per funzioni aggiuntive.</p>
             
             <div class="form-grid" id="rda-form-standard">
                 <div class="input-group"><label>Numero RDA</label><input type="text" id="rda-num"></div>
@@ -1138,12 +1138,12 @@
                     const ordVaps = vaps.filter(v => v.idOrdine === o.id);
                     const spesoOrd = ordVaps.reduce((acc, v) => acc + v.valore, 0);
                     const residuoOrd = o.valore - spesoOrd;
-                    let vapsList = ordVaps.length > 0 ? ordVaps.map(v => `<div class="vap-item">&bull; VAP ${v.num||'Semp.'} del ${formattatoreDataIT(v.data||o.dataSemplice)}: <strong>${formattatoreValuta(v.valore)}</strong></div>`).join('') : '<span style="color:#86868b;">Nessun pagamento</span>';
+                    let vapsList = ordVaps.length > 0 ? ordVaps.map(v => `<div class="vap-item">&bull; VAP ${v.num||'-'} del ${formattatoreDataIT(v.data||o.rdaData||o.dataSemplice)}: <strong>${formattatoreValuta(v.valore)}</strong></div>`).join('') : '<span style="color:#86868b;">Nessun pagamento</span>';
                     
                     if (residuoOrd > 0) { vapsList += `<div class="da-liquidare">Residuo da liquidare: ${formattatoreValuta(residuoOrd)}</div>`; }
 
                     html += `<tr>
-                        <td><strong>${o.rdaNum ? 'RDA: '+o.rdaNum : 'RDA: '+o.funzione}</strong><br><small style="color:#666;">${o.odaNum ? 'ODA: '+o.odaNum : ''}</small></td>
+                        <td><strong>${o.rdaNum ? 'RDA: '+o.rdaNum : 'RDA'}</strong><br><span style="font-size:10px; color:#0146bc; font-weight:bold;">Funzione: ${o.funzione}</span><br><small style="color:#666;">${o.odaNum ? 'ODA: '+o.odaNum : ''}</small></td>
                         <td>${formattatoreDataIT(o.rdaData || o.dataSemplice)}</td>
                         <td><strong>${formattatoreValuta(o.valore)}</strong></td>
                         <td>${vapsList}</td>
@@ -1188,7 +1188,7 @@
                         <div>
                             <button class="btn-icon" onclick="caricaVapPerModifica('${v.id}')" title="Modifica VAP">✏️</button>
                             <button class="btn-icon btn-icon-danger" onclick="eliminaVap('${v.id}')" title="Elimina VAP">🗑️</button>
-                            <strong>VAP:</strong> ${v.num || 'Semplificato'} | ${formattatoreDataIT(v.data)} | Anno: ${v.anno} | ${v.funzione} ${v.assestamento ? '<span class="vap-assestamento">Assestamento</span>' : ''}
+                            <strong>VAP:</strong> ${v.num || '-'} | ${formattatoreDataIT(v.data)} | Anno: ${v.anno} | ${v.funzione} ${v.assestamento ? '<span class="vap-assestamento">Assestamento</span>' : ''}
                         </div>
                         <strong style="color:var(--brand-blue);">${formattatoreValuta(v.valore)}</strong>
                     </div>`
@@ -1201,11 +1201,11 @@
                             <h4 style="margin-bottom:0.2rem; display:flex; align-items:center;">
                                 <button class="btn-icon" onclick="caricaRdaPerModifica('${o.id}')" title="Modifica RDA">✏️</button>
                                 <button class="btn-icon btn-icon-danger" onclick="eliminaRda('${o.id}')" title="Elimina RDA">🗑️</button>
-                                ${isMia ? `RDA: ${o.rdaNum||'-'} (ODA: ${o.odaNum||'-'})` : `Computo RDA ${o.funzione}`}
+                                ${o.rdaNum ? `RDA: ${o.rdaNum}` : 'RDA'} <span style="margin-left:8px; font-size:0.85rem; background:rgba(1,70,188,0.1); padding:2px 6px; border-radius:4px;">${o.funzione}</span> ${o.odaNum ? `(ODA: ${o.odaNum})` : ''}
                                 <span style="margin-left:10px; font-size:0.7rem; color:var(--brand-blue);">▼</span>
                             </h4>
                             <span style="font-size:0.85rem; color:var(--text-muted); margin-left: 4rem;">
-                                ${isMia ? `Data: ${formattatoreDataIT(o.rdaData)} | ODA: ${formattatoreDataIT(o.odaData)}` : `Data: ${formattatoreDataIT(o.dataSemplice)} | Anno: ${o.anno}`}
+                                Data: ${formattatoreDataIT(o.rdaData || o.dataSemplice)} ${o.odaData ? `| ODA: ${formattatoreDataIT(o.odaData)}` : ''} ${o.anno ? `| Anno: ${o.anno}` : ''}
                             </span>
                         </div>
                         <div style="text-align:right;">
@@ -1228,10 +1228,10 @@
         function toggleRdaMode() {
             const funz = document.getElementById('rda-funzione').value;
             const isMia = funz === appData.config.miaFunzione;
-            document.getElementById('rda-form-standard').style.display = isMia ? 'grid' : 'none';
-            document.getElementById('rda-altre-avviso').style.display = isMia ? 'none' : 'block';
+            document.getElementById('rda-form-standard').style.display = 'grid';
+            document.getElementById('rda-altre-avviso').style.display = 'none';
             document.getElementById('rda-anno-container').style.display = isMia ? 'none' : 'block';
-            document.getElementById('rda-data-semplice-container').style.display = isMia ? 'none' : 'block';
+            document.getElementById('rda-data-semplice-container').style.display = 'none';
         }
 
         function predisponiRdaNuova() {
@@ -1247,9 +1247,9 @@
             const sel = document.getElementById('rda-funzione'); sel.innerHTML = getOptionsFunzioni();
             sel.value = ord.funzione || appData.config.miaFunzione; toggleRdaMode();
             
-            document.getElementById('rda-num').value = ord.rdaNum || ''; document.getElementById('rda-data').value = ord.rdaData || '';
+            document.getElementById('rda-num').value = ord.rdaNum || ''; document.getElementById('rda-data').value = ord.rdaData || ord.dataSemplice || '';
             document.getElementById('oda-num').value = ord.odaNum || ''; document.getElementById('oda-data').value = ord.odaData || '';
-            document.getElementById('rda-anno').value = ord.anno || ''; document.getElementById('rda-data-semplice').value = ord.dataSemplice || '';
+            document.getElementById('rda-anno').value = ord.anno || ''; document.getElementById('rda-data-semplice').value = '';
             document.getElementById('rda-valore').value = String(ord.valore).replace('.', ',');
             
             document.getElementById('titolo-modale-rda').innerText = "Modifica Ordine"; 
@@ -1263,13 +1263,14 @@
                     id: editOrdineId ? editOrdineId : "ORD-" + Date.now(), 
                     idContratto: contrattoInGestioneId, 
                     funzione: funz,
-                    valore: parseImporto(document.getElementById('rda-valore').value)
+                    valore: parseImporto(document.getElementById('rda-valore').value),
+                    rdaNum: document.getElementById('rda-num').value,
+                    rdaData: document.getElementById('rda-data').value,
+                    odaNum: document.getElementById('oda-num').value,
+                    odaData: document.getElementById('oda-data').value
                 };
-                if(funz === appData.config.miaFunzione) {
-                    ord.rdaNum = document.getElementById('rda-num').value; ord.rdaData = document.getElementById('rda-data').value;
-                    ord.odaNum = document.getElementById('oda-num').value; ord.odaData = document.getElementById('oda-data').value;
-                } else {
-                    ord.anno = document.getElementById('rda-anno').value; ord.dataSemplice = document.getElementById('rda-data-semplice').value;
+                if(funz !== appData.config.miaFunzione) {
+                    ord.anno = document.getElementById('rda-anno').value;
                 }
                 
                 if(editOrdineId) { const idx = appData.ordini.findIndex(o => o.id === editOrdineId); if(idx !== -1) appData.ordini[idx] = ord; }
@@ -1294,7 +1295,7 @@
             
             const ord = appData.ordini.find(o => o.id === idOrdine);
             const isMia = ord.funzione === appData.config.miaFunzione;
-            document.getElementById('vap-campi-standard').style.display = isMia ? 'contents' : 'none';
+            document.getElementById('vap-campi-standard').style.display = 'contents';
             document.getElementById('vap-assestamento-container').style.display = isMia ? 'flex' : 'none';
             
             const sel = document.getElementById('vap-funzione'); sel.innerHTML = getOptionsFunzioni();
@@ -1310,7 +1311,7 @@
             const isMia = ord.funzione === appData.config.miaFunzione;
             
             document.getElementById('vap-id-ordine').value = v.idOrdine;
-            document.getElementById('vap-campi-standard').style.display = isMia ? 'contents' : 'none';
+            document.getElementById('vap-campi-standard').style.display = 'contents';
             document.getElementById('vap-assestamento-container').style.display = isMia ? 'flex' : 'none';
             
             const sel = document.getElementById('vap-funzione'); sel.innerHTML = getOptionsFunzioni();
@@ -1333,15 +1334,13 @@
                     idOrdine: ord.id, 
                     funzione: document.getElementById('vap-funzione').value,
                     valore: parseImporto(document.getElementById('vap-valore').value), 
-                    anno: document.getElementById('vap-anno').value
+                    anno: document.getElementById('vap-anno').value,
+                    num: document.getElementById('vap-num').value,
+                    data: document.getElementById('vap-data').value
                 };
                 
                 if(isMia) {
-                    vap.num = document.getElementById('vap-num').value;
-                    vap.data = document.getElementById('vap-data').value;
                     vap.assestamento = document.getElementById('vap-assestamento').checked;
-                } else {
-                    vap.data = ord.dataSemplice; // Coerenza con ordine semplificato
                 }
 
                 if(editVapId) { const idx = appData.vap.findIndex(v => v.id === editVapId); if(idx !== -1) appData.vap[idx] = vap; }

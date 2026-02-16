@@ -479,8 +479,9 @@
             
             if(attivi.length === 0) { container.innerHTML = '<div class="empty-state">Nessun contratto attivo alla data odierna.</div>'; return; }
             
-            let html = '<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">';
-            html += '<tr style="text-align:left; border-bottom:2px solid var(--border-color);"><th style="padding:10px;">Fornitore</th><th>Scadenza</th><th>Valore Totale</th><th>Speso (VAP)</th><th>Residuo</th></tr>';
+            let html = '<div style="margin-bottom: 1rem; text-align: right;"><button class="btn btn-yellow btn-small" onclick="esportaPdfContrattiAttivi()">📄 Esporta PDF</button></div>';
+            html += '<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">';
+            html += '<tr style="text-align:left; border-bottom:2px solid var(--border-color);"><th style="padding:10px;">Fornitore</th><th>Scadenza</th><th style="text-align:right;">Valore Totale</th><th style="text-align:right;">Speso (VAP)</th><th style="text-align:right;">Residuo</th></tr>';
             
             attivi.forEach(c => {
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
@@ -490,13 +491,76 @@
                 html += `<tr style="border-bottom:1px solid var(--border-color);">
                     <td style="padding:10px;"><strong>${c.fornitore}</strong><br><small>${c.numero}</small></td>
                     <td>${formattatoreDataIT(c.dataFine)} ${isProrogato}</td>
-                    <td>${formattatoreValuta(c.valore)}</td>
-                    <td style="color:var(--brand-blue);">${formattatoreValuta(speso)}</td>
-                    <td style="font-weight:600;">${formattatoreValuta(c.valore - speso)}</td>
+                    <td style="text-align:right;">${formattatoreValuta(c.valore)}</td>
+                    <td style="text-align:right; color:var(--brand-blue);">${formattatoreValuta(speso)}</td>
+                    <td style="text-align:right; font-weight:600;">${formattatoreValuta(c.valore - speso)}</td>
                 </tr>`;
             });
             html += '</table>';
             container.innerHTML = html;
+        }
+
+        function esportaPdfContrattiAttivi() {
+            const oggi = new Date().toISOString().split('T')[0];
+            const attivi = appData.contratti.filter(c => c.dataFine >= oggi);
+
+            let html = `<!DOCTYPE html>
+            <html lang="it">
+            <head>
+                <meta charset="UTF-8">
+                <title>Report Contratti Attivi</title>
+                <style>
+                    @page { size: A4 landscape; margin: 15mm; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 12px; }
+                    h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin-bottom: 20px; font-size: 20px; }
+                    .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    .table th, .table td { border: 1px solid #d2d2d7; padding: 8px; text-align: left; vertical-align: middle; }
+                    .table th { background-color: #0146bc; color: white; }
+                    .table tr:nth-child(even) { background-color: #f9f9f9; }
+                </style>
+            </head>
+            <body>
+                <h1>Report Contratti Attivi (al ${new Date().toLocaleDateString('it-IT')})</h1>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Fornitore</th>
+                            <th>Scadenza</th>
+                            <th style="text-align:right;">Valore Totale</th>
+                            <th style="text-align:right;">Speso (VAP)</th>
+                            <th style="text-align:right;">Residuo</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            attivi.forEach(c => {
+                const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
+                const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
+                const isProrogato = (c.proroghe && c.proroghe.length > 0) ? `<span style="color:#0146bc; font-size:10px;">[PROROGATO]</span>` : '';
+                
+                html += `<tr>
+                    <td><strong>${c.fornitore || 'N/D'}</strong><br><small style="color:#666;">${c.numero || 'N/D'}</small></td>
+                    <td>${formattatoreDataIT(c.dataFine)} ${isProrogato}</td>
+                    <td style="text-align:right;">${formattatoreValuta(c.valore)}</td>
+                    <td style="text-align:right; color:#b05a00;">${formattatoreValuta(speso)}</td>
+                    <td style="text-align:right; font-weight:bold;">${formattatoreValuta(c.valore - speso)}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>
+                <script>
+                    window.onload = function() { 
+                        window.onafterprint = function() { window.close(); };
+                        setTimeout(function() { window.print(); }, 500);
+                    };
+                <\/script>
+            </body>
+            </html>`;
+
+            let printWin = window.open('', '_blank');
+            printWin.document.open();
+            printWin.document.write(html);
+            printWin.document.close();
         }
 
         function renderBudgetAnnuale() {

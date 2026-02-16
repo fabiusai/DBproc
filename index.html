@@ -1160,10 +1160,16 @@
                 ordini.forEach(o => {
                     const ordVaps = vaps.filter(v => v.idOrdine === o.id);
                     const spesoOrd = ordVaps.reduce((acc, v) => acc + v.valore, 0);
-                    const residuoOrd = o.valore - spesoOrd;
-                    let vapsList = ordVaps.length > 0 ? ordVaps.map(v => `<div class="vap-item">&bull; VAP ${v.num||'-'} del ${formattatoreDataIT(v.data||o.rdaData||o.dataSemplice)}: <strong>${formattatoreValuta(v.valore)}</strong></div>`).join('') : '<span style="color:#86868b;">Nessun pagamento</span>';
+                    let residuoOrd = o.valore - spesoOrd;
+                    if (Math.abs(residuoOrd) < 0.01) residuoOrd = 0;
+                    let vapsList = ordVaps.length > 0 ? ordVaps.map(v => {
+                        let dObj = new Date(v.data||o.rdaData||o.dataSemplice);
+                        let dStr = isNaN(dObj.getTime()) ? '-' : dObj.toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
+                        return `<div class="vap-item">&bull; VAP ${v.num||'-'} del ${dStr}: <strong>${formattatoreValuta(v.valore)}</strong></div>`;
+                    }).join('') : '<span style="color:#86868b;">Nessun pagamento</span>';
                     
-                    if (residuoOrd > 0) { vapsList += `<div class="da-liquidare">Residuo disponibile in RDA: ${formattatoreValuta(residuoOrd)}</div>`; }
+                    let coloreRes = residuoOrd < 0 ? '#d93025' : (residuoOrd === 0 ? '#86868b' : '#137333');
+                    vapsList += `<div style="color: ${coloreRes}; font-size: 11px; margin-top: 4px;">Residuo disponibile in RDA: ${formattatoreValuta(residuoOrd)}</div>`;
 
                     html += `<tr>
                         <td><strong>${o.rdaNum ? 'RDA: '+o.rdaNum : 'RDA'}</strong><br><span style="font-size:10px; color:#0146bc; font-weight:bold;">Funzione: ${o.funzione}</span><br><small style="color:#666;">${o.odaNum ? 'ODA: '+o.odaNum : ''}</small></td>
@@ -1174,12 +1180,14 @@
                 });
             }
             
+            const impegnatoRdaTotale = ordini.reduce((sum, o) => sum + o.valore, 0);
             html += `</tbody></table>
                 <div class="totali">
-                    Totale Impegnato: ${formattatoreValuta(ctr.valore)}<br>
+                    Totale Contratto: ${formattatoreValuta(ctr.valore)}<br>
+                    Totale Impegnato (RDA): ${formattatoreValuta(impegnatoRdaTotale)}<br>
                     Totale Liquidato (VAP): ${formattatoreValuta(speso)}<br>
                     <hr style="border-top:1px solid #0146bc; margin:8px 0;">
-                    Residuo Disponibile: ${formattatoreValuta(ctr.valore - speso)}
+                    Residuo Disponibile: ${formattatoreValuta(ctr.valore - impegnatoRdaTotale)}
                 </div>
                 <script>
                     window.onload = function() { 
@@ -1208,16 +1216,18 @@
                 if (Math.abs(residuo) < 0.01) residuo = 0;
                 const isMia = o.funzione === appData.config.miaFunzione;
 
-                let vapHtml = vaps.length === 0 ? `<p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Nessun VAP registrato.</p>` : vaps.map(v => 
-                    `<div class="vap-row">
+                let vapHtml = vaps.length === 0 ? `<p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Nessun VAP registrato.</p>` : vaps.map(v => {
+                    let dObj = new Date(v.data);
+                    let dStr = isNaN(dObj.getTime()) ? '-' : dObj.toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
+                    return `<div class="vap-row">
                         <div>
                             <button class="btn-icon" onclick="caricaVapPerModifica('${v.id}')" title="Modifica VAP">✏️</button>
                             <button class="btn-icon btn-icon-danger" onclick="eliminaVap('${v.id}')" title="Elimina VAP">🗑️</button>
-                            <strong>VAP:</strong> ${v.num || '-'} | ${formattatoreDataIT(v.data)} | Anno: ${v.anno} | ${v.funzione} ${v.assestamento ? '<span class="vap-assestamento">Assestamento</span>' : ''}
+                            <strong>VAP:</strong> ${v.num || '-'} | ${dStr} | Anno: ${v.anno} | ${v.funzione} ${v.assestamento ? '<span class="vap-assestamento">Assestamento</span>' : ''}
                         </div>
                         <strong style="color:var(--brand-blue);">${formattatoreValuta(v.valore)}</strong>
-                    </div>`
-                ).join('');
+                    </div>`;
+                }).join('');
 
                 const card = document.createElement('div'); card.className = 'ordine-card';
                 card.innerHTML = `
@@ -1235,7 +1245,7 @@
                         </div>
                         <div style="text-align:right;">
                             <span style="display:block; font-weight:600; font-size:1.1rem;">Valore: ${formattatoreValuta(o.valore)}</span>
-                            <span style="display:block; font-size:0.85rem; color:${residuo < 0 ? 'red' : 'green'};">Residuo disponibile in RDA: ${formattatoreValuta(residuo)}</span>
+                            <span style="display:block; font-size:0.85rem; color:${residuo < 0 ? '#d93025' : (residuo === 0 ? 'var(--text-muted)' : '#137333')};">Residuo disponibile in RDA: ${formattatoreValuta(residuo)}</span>
                         </div>
                     </div>
                     <div class="ordine-body" style="display:none; border-top: 1px solid var(--border-color);">

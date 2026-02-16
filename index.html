@@ -61,6 +61,8 @@
         .badge-quadro { background-color: rgba(1, 70, 188, 0.1); color: var(--brand-blue); }
         .badge-diretta { background-color: rgba(237, 220, 1, 0.3); color: #8a7b00; }
         .badge-terzi { background-color: #f0f0f5; color: var(--text-muted); }
+        .badge-proroga { background-color: #e8f0fe; color: var(--brand-blue); font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: bold; margin-left: 0.5rem; border: 1px solid #b6d4fe; vertical-align: middle;}
+        
         .card-actions { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;}
         .card-actions .valore { font-size: 1.25rem; font-weight: 600; display: block; }
 
@@ -68,7 +70,8 @@
         .segmented-control button { flex: 1; padding: 0.5rem 1rem; border: none; background: transparent; font-weight: 600; color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
         .segmented-control button.active-segment { background-color: var(--surface-color); color: var(--brand-blue); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        .budget-row { display: flex; gap: 1rem; margin-bottom: 0.75rem; align-items: center; background: var(--bg-color); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); }
+        .budget-row, .proroga-row { display: flex; gap: 1rem; margin-bottom: 0.75rem; align-items: center; background: var(--bg-color); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); }
+        .proroga-row { margin-bottom: 0.5rem; padding: 0.5rem 0.75rem; }
         .status-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
         .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
 
@@ -80,7 +83,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .dettaglio-header { background: var(--brand-blue); color: white; padding: 1.5rem; border-radius: var(--radius-box); margin-bottom: 1.5rem; }
-        .dettaglio-header h3 { margin-bottom: 0.5rem; }
+        .dettaglio-header h3 { margin-bottom: 0.5rem; display: flex; align-items: center; }
         .dettaglio-note { background: rgba(255,255,255,0.1); padding: 0.75rem; border-radius: 6px; margin-top: 1rem; font-size: 0.9rem; font-style: italic; }
 
         .ordine-card { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
@@ -313,6 +316,37 @@
         </div>
     </div>
 
+    <div id="modal-proroga" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Proroga / Rimodulazione Contratto</h3>
+                <button class="btn-close" onclick="chiudiModale('modal-proroga')">&times;</button>
+            </div>
+            <input type="hidden" id="proroga-id-contratto">
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">Estendi la data di scadenza del contratto. Se è un contratto quadro, puoi riassegnare il budget complessivo tra le varie funzioni.</p>
+            
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Nuova Data Fine</label>
+                    <input type="date" id="proroga-nuova-data">
+                </div>
+            </div>
+
+            <div id="proroga-ripartizioni-container" style="display: none; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4>Rimodulazione Budget (Totali Assoluti)</h4>
+                    <span id="proroga-status" class="status-badge">Da quadrare</span>
+                </div>
+                <div id="proroga-lista-ripartizioni"></div>
+                <p style="font-size: 0.8rem; color: #d93025; margin-top: 0.5rem; font-weight: 500;">Attenzione: il nuovo importo di una funzione non può essere inferiore a quanto ha già speso (VAP).</p>
+            </div>
+            
+            <div style="text-align: right; margin-top: 1.5rem;">
+                <button class="btn btn-yellow" id="btn-salva-proroga" onclick="salvaProroga(this)">Conferma Proroga</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         /* --- MOTORE DATI E STATO GLOBALE --- */
         const DB_KEY = "contratti_db_v6"; 
@@ -451,9 +485,11 @@
             attivi.forEach(c => {
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
                 const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
+                const isProrogato = (c.proroghe && c.proroghe.length > 0) ? `<span style="color:var(--brand-blue); font-size:0.8rem; font-weight:bold; margin-left:5px;">(P)</span>` : '';
+                
                 html += `<tr style="border-bottom:1px solid var(--border-color);">
                     <td style="padding:10px;"><strong>${c.fornitore}</strong><br><small>${c.numero}</small></td>
-                    <td>${formattatoreDataIT(c.dataFine)}</td>
+                    <td>${formattatoreDataIT(c.dataFine)} ${isProrogato}</td>
                     <td>${formattatoreValuta(c.valore)}</td>
                     <td style="color:var(--brand-blue);">${formattatoreValuta(speso)}</td>
                     <td style="font-weight:600;">${formattatoreValuta(c.valore - speso)}</td>
@@ -468,7 +504,6 @@
             const annoRicerca = document.getElementById('budget-anno-filter').value;
             const miaFunzione = appData.config.miaFunzione;
 
-            // Filtra VAP per anno e funzione primaria
             const vapsStruttura = appData.vap.filter(v => v.anno == annoRicerca && v.funzione === miaFunzione);
             
             if(vapsStruttura.length === 0) { container.innerHTML = `<div class="empty-state">Nessuna spesa registrata per la struttura ${miaFunzione} nell'anno ${annoRicerca}.</div>`; return; }
@@ -530,6 +565,8 @@
             filtrati.forEach(c => {
                 let badge = c.tipo === 'quadro' ? 'badge-quadro' : (c.tipo === 'diretta' ? 'badge-diretta' : 'badge-terzi');
                 let label = c.tipo === 'quadro' ? 'Quadro' : (c.tipo === 'diretta' ? 'Diretta' : 'Terze Funzioni');
+                let badgeProroga = (c.proroghe && c.proroghe.length > 0) ? `<span class="badge-proroga">PROROGATO</span>` : '';
+
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
                 const vapsC = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine));
                 const speso = vapsC.reduce((acc, v) => acc + v.valore, 0);
@@ -541,8 +578,8 @@
                             <span class="badge-tipo ${badge}">${label}</span>
                             <small style="color:var(--text-muted); font-size:0.7rem;">ID: ${c.id}</small>
                         </div>
-                        <h4 style="margin: 4px 0;">${c.fornitore || 'Fornitore non specificato'}</h4>
-                        <p><strong>N°:</strong> ${c.numero || 'N/D'} | <strong>Periodo:</strong> ${formattatoreDataIT(c.dataInizio)} - ${formattatoreDataIT(c.dataFine)}</p>
+                        <h4 style="margin: 4px 0;">${c.fornitore || 'Fornitore non specificato'} ${badgeProroga}</h4>
+                        <p><strong>N°:</strong> ${c.numero || 'N/D'} | <strong>Scadenza:</strong> ${formattatoreDataIT(c.dataFine)}</p>
                         <p style="font-size:0.8rem; margin-top:5px;">
                             <strong>Pagato:</strong> ${formattatoreValuta(speso)} 
                             <span style="color:var(--text-muted); margin-left:10px;">(Residuo: ${formattatoreValuta(c.valore - speso)})</span>
@@ -621,6 +658,12 @@
         function salvaContrattoAttivo(btn) {
             withFeedback(btn, "Salvataggio...", "Fatto!", editContrattoId ? "Aggiorna Contratto" : "Salva Contratto", () => {
                 let ctr = { id: editContrattoId ? editContrattoId : "CTR-" + Date.now(), tipo: tipoContrattoAttivo, dataCreazione: editContrattoId ? appData.contratti.find(c=>c.id===editContrattoId).dataCreazione : new Date().toISOString() };
+                
+                // Mantiene lo storico proroghe in caso di modifica anagrafica
+                if(editContrattoId && appData.contratti.find(c=>c.id===editContrattoId).proroghe) {
+                    ctr.proroghe = appData.contratti.find(c=>c.id===editContrattoId).proroghe;
+                }
+
                 if (tipoContrattoAttivo === 'quadro') {
                     ctr.fornitore = document.getElementById('cq-fornitore').value; ctr.numero = document.getElementById('cq-numero').value;
                     ctr.dataInizio = document.getElementById('cq-inizio').value; ctr.dataFine = document.getElementById('cq-fine').value;
@@ -650,11 +693,157 @@
             switchContractType('form-quadro', document.getElementById('seg-quadro'));
         }
 
-        /* --- GESTIONE SPESE (RDA, VAP) --- */
+        /* --- LOGICA PROROGHE --- */
+        function apriModaleProroga(id) {
+            const ctr = appData.contratti.find(c => c.id === id);
+            if (!ctr) return;
+            document.getElementById('proroga-id-contratto').value = ctr.id;
+            document.getElementById('proroga-nuova-data').value = ctr.dataFine || '';
+            
+            const ripContainer = document.getElementById('proroga-ripartizioni-container');
+            const listaRip = document.getElementById('proroga-lista-ripartizioni');
+            listaRip.innerHTML = '';
+            
+            if (ctr.tipo === 'quadro') {
+                ripContainer.style.display = 'block';
+                
+                // Calcola lo speso per funzione (i VAP)
+                const ordiniCtr = appData.ordini.filter(o => o.idContratto === ctr.id);
+                const vapsCtr = appData.vap.filter(v => ordiniCtr.some(o => o.id === v.idOrdine));
+                
+                let spesoPerFunzione = {};
+                vapsCtr.forEach(v => {
+                    const f = v.funzione || 'N/D';
+                    spesoPerFunzione[f] = (spesoPerFunzione[f] || 0) + v.valore;
+                });
+
+                if (ctr.ripartizioni) {
+                    ctr.ripartizioni.forEach(r => {
+                        const f = r.funzione || 'N/D';
+                        const speso = spesoPerFunzione[f] || 0;
+                        const valFormattato = r.importo ? String(r.importo).replace('.', ',') : '0,00';
+                        
+                        listaRip.innerHTML += `
+                            <div class="proroga-row">
+                                <strong style="flex:1;">${f} <span style="font-size:0.75rem; font-weight:normal;">(Anno: ${r.anno})</span></strong>
+                                <span style="flex:1; font-size:0.85rem; color:var(--brand-blue);">Speso (VAP): ${formattatoreValuta(speso)}</span>
+                                <input type="hidden" class="p-funz" value="${f}">
+                                <input type="hidden" class="p-anno" value="${r.anno}">
+                                <input type="hidden" class="p-minimo" value="${speso}">
+                                <div style="flex:1; display:flex; flex-direction:column;">
+                                    <label style="font-size:0.7rem; color:var(--text-muted);">Nuovo Budget Assoluto</label>
+                                    <input type="text" inputmode="decimal" class="p-importo" oninput="calcolaQuadraturaProroga()" style="padding:0.5rem; border-radius:4px; border:1px solid #ccc; width:100%;" value="${valFormattato}">
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                calcolaQuadraturaProroga();
+            } else {
+                ripContainer.style.display = 'none';
+                document.getElementById('btn-salva-proroga').disabled = false;
+            }
+            
+            apriModale('modal-proroga');
+        }
+
+        function calcolaQuadraturaProroga() {
+            const id = document.getElementById('proroga-id-contratto').value;
+            const ctr = appData.contratti.find(c => c.id === id);
+            if (!ctr || ctr.tipo !== 'quadro') return;
+
+            const totaleContratto = ctr.valore;
+            let somma = 0;
+            let valid = true;
+
+            document.querySelectorAll('.proroga-row').forEach(row => {
+                const importo = parseImporto(row.querySelector('.p-importo').value);
+                const minimo = parseFloat(row.querySelector('.p-minimo').value) || 0;
+                somma += importo;
+                
+                // Tolleranza per arrotondamenti decimali
+                if (importo < (minimo - 0.01)) { 
+                    valid = false;
+                    row.querySelector('.p-importo').style.borderColor = '#d93025';
+                    row.querySelector('.p-importo').style.backgroundColor = '#ffebeb';
+                } else {
+                    row.querySelector('.p-importo').style.borderColor = '#ccc';
+                    row.querySelector('.p-importo').style.backgroundColor = 'var(--bg-color)';
+                }
+            });
+
+            const btn = document.getElementById('btn-salva-proroga');
+            const badge = document.getElementById('proroga-status');
+            
+            if (valid && Math.abs(totaleContratto - somma) < 0.01) {
+                badge.textContent = "Budget Quadrato"; badge.style.background = "#e6f4ea"; badge.style.color = "#137333";
+                btn.disabled = false;
+            } else {
+                badge.textContent = `Scostamento / Valore non valido`; badge.style.background = "#fff4e5"; badge.style.color = "#b05a00";
+                btn.disabled = true;
+            }
+        }
+
+        function salvaProroga(btn) {
+            const id = document.getElementById('proroga-id-contratto').value;
+            const nuovaData = document.getElementById('proroga-nuova-data').value;
+            if (!nuovaData) { alert("Inserisci una nuova data di fine valida."); return; }
+
+            withFeedback(btn, "Salvataggio...", "Proroga Salvata", "Conferma Proroga", () => {
+                const idx = appData.contratti.findIndex(c => c.id === id);
+                if (idx === -1) return;
+                
+                let ctr = appData.contratti[idx];
+                
+                // Inizializza l'array storico se non esiste
+                if (!ctr.proroghe) ctr.proroghe = [];
+                
+                // Crea snapshot dello stato attuale
+                let storico = {
+                    dataProroga: new Date().toISOString().split('T')[0],
+                    vecchiaDataFine: ctr.dataFine
+                };
+                if (ctr.tipo === 'quadro') {
+                    storico.vecchieRipartizioni = JSON.parse(JSON.stringify(ctr.ripartizioni));
+                }
+                ctr.proroghe.push(storico);
+
+                // Aggiorna il Contratto
+                ctr.dataFine = nuovaData;
+                
+                if (ctr.tipo === 'quadro') {
+                    ctr.ripartizioni = [];
+                    document.querySelectorAll('.proroga-row').forEach(row => {
+                        ctr.ripartizioni.push({
+                            funzione: row.querySelector('.p-funz').value,
+                            anno: row.querySelector('.p-anno').value,
+                            importo: parseImporto(row.querySelector('.p-importo').value)
+                        });
+                    });
+                }
+
+                appData.contratti[idx] = ctr;
+                salvaDati();
+                chiudiModale('modal-proroga');
+                
+                // Aggiorna la vista
+                apriDettaglioContratto(ctr.id);
+            });
+        }
+
+
+        /* --- GESTIONE SPESE (RDA, VAP) E VISTA DETTAGLIO --- */
         function apriDettaglioContratto(id) {
             contrattoInGestioneId = id; const ctr = appData.contratti.find(c => c.id === id); if(!ctr) return;
             let label = ctr.tipo === 'quadro' ? 'Contratto Quadro' : (ctr.tipo === 'diretta' ? 'Assegnazione Diretta' : 'Terze Funzioni');
             
+            let badgeProroga = (ctr.proroghe && ctr.proroghe.length > 0) ? `<span class="badge-proroga">PROROGATO</span>` : '';
+            let infoProroga = '';
+            if (ctr.proroghe && ctr.proroghe.length > 0) {
+                const primaProroga = ctr.proroghe[0]; // Recupera la data originale (della prima proroga)
+                infoProroga = `<br><small style="color:rgba(255,255,255,0.8); font-size:0.8rem;">Scadenza Originale: ${formattatoreDataIT(primaProroga.vecchiaDataFine)}</small>`;
+            }
+
             let statsHtml = '';
             if (ctr.tipo === 'quadro') {
                 const ordiniCtr = appData.ordini.filter(o => o.idContratto === ctr.id);
@@ -689,7 +878,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(0,0,0,0.15); border-radius: 4px; margin-bottom: 0.25rem;">
                         <strong style="color: #fff; flex: 1;">${f}</strong>
                         <div style="display: flex; gap: 15px; text-align: right; font-size: 0.85rem; flex: 3; justify-content: flex-end;">
-                            <div style="width: 30%;">Previsto: <br><span style="font-weight: 600;">${formattatoreValuta(dt.previsto)}</span></div>
+                            <div style="width: 30%;">Previsto (Attuale): <br><span style="font-weight: 600;">${formattatoreValuta(dt.previsto)}</span></div>
                             <div style="width: 35%;">Impegnato RDA: <br><span style="font-weight: 600;">${formattatoreValuta(dt.rda)}</span><br><span style="font-size: 0.75rem; color: ${resRda < 0 ? '#ff8a80' : 'rgba(255,255,255,0.7)'};">Res: ${formattatoreValuta(resRda)}</span></div>
                             <div style="width: 30%;">Speso VAP: <br><span style="font-weight: 600; color: var(--brand-yellow);">${formattatoreValuta(dt.vap)}</span></div>
                         </div>
@@ -706,13 +895,31 @@
                     </div>
                     ${Object.keys(statsFunzioni).length > 0 ? `
                     <div style="border-top: 1px dashed rgba(255,255,255,0.3); padding-top: 0.75rem;">
-                        <span style="display:block; font-size:0.8rem; text-transform:uppercase; opacity:0.8; margin-bottom: 0.5rem;">Dettaglio Quote per Funzione</span>
+                        <span style="display:block; font-size:0.8rem; text-transform:uppercase; opacity:0.8; margin-bottom: 0.5rem;">Dettaglio Quote per Funzione (Valori Attuali)</span>
                         ${htmlFunzioni}
                     </div>` : ''}
                 </div>`;
             }
 
-            document.getElementById('spese-header').innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start;"><div><span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span><h3 style="margin-top:0.5rem;">${ctr.fornitore || 'Bozza'}</h3><p><strong>N°:</strong> ${ctr.numero || 'N/D'} | <strong>Validità:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)}</p></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><div style="text-align:right;"><span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p style="margin:0;">Budget Totale</p></div><button class="btn btn-yellow btn-small" onclick="esportaPdfContratto('${ctr.id}')">📄 Esporta PDF</button></div></div>${statsHtml}${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
+            document.getElementById('spese-header').innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <span style="background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; font-size:0.8rem; text-transform:uppercase;">${label}</span>
+                        <h3 style="margin-top:0.5rem;">${ctr.fornitore || 'Bozza'} ${badgeProroga}</h3>
+                        <p><strong>N°:</strong> ${ctr.numero || 'N/D'} | <strong>Validità:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)} ${infoProroga}</p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                        <div style="text-align:right;">
+                            <span style="font-size:1.5rem; font-weight:600;">${formattatoreValuta(ctr.valore)}</span><p style="margin:0;">Budget Totale</p>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <button class="btn btn-outline btn-small" style="color:#fff; border-color:#fff;" onclick="apriModaleProroga('${ctr.id}')">⏳ Proroga</button>
+                            <button class="btn btn-yellow btn-small" onclick="esportaPdfContratto('${ctr.id}')">📄 Esporta PDF</button>
+                        </div>
+                    </div>
+                </div>
+                ${statsHtml}
+                ${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
             
             const content = document.getElementById('spese-content');
             if (ctr.tipo === 'terzi') { content.innerHTML = `<div class="empty-state"><h4>Nessuna RDA necessaria</h4><p>Contratto gestito da ${ctr.funzioneGestore}.</p></div>`; } 
@@ -725,6 +932,13 @@
             const ordini = appData.ordini.filter(o => o.idContratto === id);
             const vaps = appData.vap.filter(v => ordini.some(o => o.id === v.idOrdine));
             const speso = vaps.reduce((sum, v) => sum + v.valore, 0);
+
+            let badgeProrogaPdf = (ctr.proroghe && ctr.proroghe.length > 0) ? `<span style="color:#0146bc; font-size:12px;">[PROROGATO]</span>` : '';
+            let infoProrogaPdf = '';
+            if (ctr.proroghe && ctr.proroghe.length > 0) {
+                const primaProroga = ctr.proroghe[0];
+                infoProrogaPdf = `<br><span style="font-size:10px; color:#666;">Scadenza originale: ${formattatoreDataIT(primaProroga.vecchiaDataFine)}</span>`;
+            }
 
             let statsHtml = '';
             if (ctr.tipo === 'quadro') {
@@ -790,7 +1004,7 @@
                     </div>
                     ${Object.keys(statsFunzioni).length > 0 ? `
                     <div style="margin-top: 15px; border-top: 1px solid #d2d2d7; padding-top: 15px;">
-                        <span style="display: block; font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Dettaglio Quote per Funzione</span>
+                        <span style="display: block; font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Dettaglio Quote per Funzione (Valori Attuali)</span>
                         <table class="table" style="width: 100%; margin-bottom: 0; font-size: 11px;">
                             <thead>
                                 <tr>
@@ -831,7 +1045,7 @@
                 </style>
             </head>
             <body>
-                <h1>Dossier Riassuntivo Contratto</h1>
+                <h1>Dossier Riassuntivo Contratto ${badgeProrogaPdf}</h1>
                 <div class="info-grid">
                     <div class="info-row">
                         <div class="info-cell" style="width: 50%;"><strong>Fornitore:</strong> ${ctr.fornitore || 'N/D'}</div>
@@ -839,7 +1053,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-cell"><strong>Tipologia:</strong> ${ctr.tipo.toUpperCase()}</div>
-                        <div class="info-cell"><strong>Periodo:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)}</div>
+                        <div class="info-cell"><strong>Periodo:</strong> ${formattatoreDataIT(ctr.dataInizio)} - ${formattatoreDataIT(ctr.dataFine)} ${infoProrogaPdf}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-cell"><strong>Valore Totale:</strong> ${formattatoreValuta(ctr.valore)}</div>

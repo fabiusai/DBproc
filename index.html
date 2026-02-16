@@ -1203,7 +1203,9 @@
 
             ordiniCtr.forEach(o => {
                 const vaps = appData.vap.filter(v => v.idOrdine === o.id);
-                let totaleVap = 0; vaps.forEach(v => totaleVap += v.valore); let residuo = o.valore - totaleVap;
+                let totaleVap = 0; vaps.forEach(v => totaleVap += v.valore); 
+                let residuo = o.valore - totaleVap;
+                if (Math.abs(residuo) < 0.01) residuo = 0;
                 const isMia = o.funzione === appData.config.miaFunzione;
 
                 let vapHtml = vaps.length === 0 ? `<p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Nessun VAP registrato.</p>` : vaps.map(v => 

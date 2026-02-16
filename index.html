@@ -1132,7 +1132,7 @@
                 </style>
             </head>
             <body>
-                <h1>Dossier Riassuntivo Contratto ${badgeProrogaPdf}</h1>
+                <h1>Dossier Riassuntivo Contratto ${badgeProrogaPdf} <span style="font-size: 12px; color: #666; font-weight: normal; margin-left: 10px;">Dati aggiornati al ${new Date().toLocaleDateString('it-IT')}</span></h1>
                 <div class="info-grid">
                     <div class="info-row">
                         <div class="info-cell" style="width: 50%;"><strong>Fornitore:</strong> ${ctr.fornitore || 'N/D'}</div>
@@ -1163,7 +1163,7 @@
                     const residuoOrd = o.valore - spesoOrd;
                     let vapsList = ordVaps.length > 0 ? ordVaps.map(v => `<div class="vap-item">&bull; VAP ${v.num||'-'} del ${formattatoreDataIT(v.data||o.rdaData||o.dataSemplice)}: <strong>${formattatoreValuta(v.valore)}</strong></div>`).join('') : '<span style="color:#86868b;">Nessun pagamento</span>';
                     
-                    if (residuoOrd > 0) { vapsList += `<div class="da-liquidare">Residuo da liquidare: ${formattatoreValuta(residuoOrd)}</div>`; }
+                    if (residuoOrd > 0) { vapsList += `<div class="da-liquidare">Residuo disponibile in RDA: ${formattatoreValuta(residuoOrd)}</div>`; }
 
                     html += `<tr>
                         <td><strong>${o.rdaNum ? 'RDA: '+o.rdaNum : 'RDA'}</strong><br><span style="font-size:10px; color:#0146bc; font-weight:bold;">Funzione: ${o.funzione}</span><br><small style="color:#666;">${o.odaNum ? 'ODA: '+o.odaNum : ''}</small></td>
@@ -1233,7 +1233,7 @@
                         </div>
                         <div style="text-align:right;">
                             <span style="display:block; font-weight:600; font-size:1.1rem;">Valore: ${formattatoreValuta(o.valore)}</span>
-                            <span style="display:block; font-size:0.85rem; color:${residuo < 0 ? 'red' : 'green'};">Da liquidare: ${formattatoreValuta(residuo)}</span>
+                            <span style="display:block; font-size:0.85rem; color:${residuo < 0 ? 'red' : 'green'};">Residuo disponibile in RDA: ${formattatoreValuta(residuo)}</span>
                         </div>
                     </div>
                     <div class="ordine-body" style="display:none; border-top: 1px solid var(--border-color);">

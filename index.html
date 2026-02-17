@@ -1122,6 +1122,71 @@
                 </div>`;
             }
 
+            let storicoHtml = '';
+            if (ctr.tipo === 'quadro' && ctr.proroghe && ctr.proroghe.length > 0) {
+                const limitDateObj = new Date();
+                limitDateObj.setDate(limitDateObj.getDate() - 30);
+                const limitDate = limitDateObj.toISOString().split('T')[0];
+
+                let historyByFunc = {};
+                ctr.proroghe.forEach(p => {
+                    if (p.vecchieRipartizioni) {
+                        let tempFuncs = {};
+                        p.vecchieRipartizioni.forEach(r => {
+                            let f = r.funzione || 'N/D';
+                            tempFuncs[f] = (tempFuncs[f] || 0) + (r.importo || 0);
+                        });
+                        for (let f in tempFuncs) {
+                            if (!historyByFunc[f]) historyByFunc[f] = [];
+                            historyByFunc[f].push({ data: p.dataProroga, importo: tempFuncs[f] });
+                        }
+                    }
+                });
+
+                let contentHtml = '';
+                for (let f in historyByFunc) {
+                    let funcStorico = historyByFunc[f].sort((a, b) => new Date(b.data) - new Date(a.data));
+                    
+                    let recent = funcStorico.filter(h => h.data >= limitDate);
+                    let old = funcStorico.filter(h => h.data < limitDate);
+                    
+                    let filtered = [];
+                    if (recent.length > 0) filtered.push(recent[0]);
+                    filtered = filtered.concat(old);
+
+                    let deduplicated = [];
+                    let lastImporto = null;
+                    for (let i = 0; i < filtered.length; i++) {
+                        if (filtered[i].importo !== lastImporto) {
+                            deduplicated.push(filtered[i]);
+                            lastImporto = filtered[i].importo;
+                        }
+                    }
+
+                    if (deduplicated.length > 0) {
+                        let itemsHtml = deduplicated.map(h => `<div style="font-size: 0.85rem; margin-bottom: 2px;">
+                            <span style="opacity: 0.9;">Valore fino al ${formattatoreDataIT(h.data)}:</span> <strong style="color:var(--brand-yellow);">${formattatoreValuta(h.importo)}</strong>
+                        </div>`).join('');
+                        
+                        contentHtml += `<div style="margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <strong style="color: #fff; display:block; margin-bottom: 4px;">${f}</strong>
+                            ${itemsHtml}
+                        </div>`;
+                    }
+                }
+
+                if (contentHtml !== '') {
+                    storicoHtml = `<details style="margin-top: 1rem; background: rgba(0,0,0,0.15); border-radius: 6px; border: 1px dashed rgba(255,255,255,0.3);">
+                        <summary style="padding: 0.75rem 1rem; cursor: pointer; color: #fff; font-size: 0.9rem; font-weight: 600; outline: none; user-select: none;">
+                            ⏱️ Visualizza Storico Rimodulazioni Quote
+                        </summary>
+                        <div style="padding: 0 1rem 1rem 1rem; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                            ${contentHtml}
+                        </div>
+                    </details>`;
+                }
+            }
+
             document.getElementById('spese-header').innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div>
@@ -1140,6 +1205,7 @@
                     </div>
                 </div>
                 ${statsHtml}
+                ${storicoHtml}
                 ${ctr.note ? `<div class="dettaglio-note"><strong>Note:</strong> ${ctr.note}</div>` : ''}`;
             
             const content = document.getElementById('spese-content');

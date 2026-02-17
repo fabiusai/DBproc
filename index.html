@@ -888,7 +888,7 @@
             document.getElementById('container-ripartizioni').innerHTML = ''; aggiungiRigaBudget(); calcolaQuadratura();
             document.getElementById('titolo-form-contratto').innerText = "Inserimento Nuovo Contratto"; document.getElementById('btn-salva-contratto').innerText = "Salva Contratto";
             document.querySelectorAll('.segmented-control button').forEach(btn => { btn.style.opacity = "1"; btn.style.pointerEvents = "auto"; });
-            switchContractType('form-quadro', document.getElementById('seg-quadro'));
+            switchContractType('form-diretta', document.getElementById('seg-diretta'));
         }
 
         /* --- LOGICA PROROGHE --- */
@@ -1472,7 +1472,18 @@
         function predisponiRdaNuova() {
             editOrdineId = null; document.querySelectorAll('#modal-rda input').forEach(i => i.value = '');
             const sel = document.getElementById('rda-funzione'); sel.innerHTML = getOptionsFunzioni();
-            sel.value = appData.config.miaFunzione; toggleRdaMode();
+            sel.value = appData.config.miaFunzione; 
+            
+            if (contrattoInGestioneId) {
+                const ctr = appData.contratti.find(c => c.id === contrattoInGestioneId);
+                if (ctr && ctr.tipo === 'diretta') {
+                    document.getElementById('rda-num').value = ctr.numero || '';
+                    if (ctr.funzioneGestore) sel.value = ctr.funzioneGestore;
+                    document.getElementById('rda-valore').value = ctr.valore ? String(ctr.valore).replace('.', ',') : '';
+                }
+            }
+            
+            toggleRdaMode();
             document.getElementById('titolo-modale-rda').innerText = "Aggiungi Ordine (RDA / ODA)"; 
             apriModale('modal-rda');
         }

@@ -905,29 +905,42 @@
             if (ctr.tipo === 'quadro') {
                 ripContainer.style.display = 'block';
                 
-                // Calcola lo speso per funzione (i VAP)
                 const ordiniCtr = appData.ordini.filter(o => o.idContratto === ctr.id);
-                const vapsCtr = appData.vap.filter(v => ordiniCtr.some(o => o.id === v.idOrdine));
                 
-                let spesoPerFunzione = {};
-                vapsCtr.forEach(v => {
-                    const f = v.funzione || 'N/D';
-                    spesoPerFunzione[f] = (spesoPerFunzione[f] || 0) + v.valore;
+                let impegnatoRdaTotale = 0;
+                let impegnatoPerFunzione = {};
+                ordiniCtr.forEach(o => {
+                    const f = o.funzione || 'N/D';
+                    impegnatoPerFunzione[f] = (impegnatoPerFunzione[f] || 0) + o.valore;
+                    impegnatoRdaTotale += o.valore;
                 });
 
+                listaRip.innerHTML = `
+                <div id="proroga-helper" style="margin-bottom: 1rem; padding: 1rem; background: #e8f0fe; border-radius: 6px; font-size: 0.9rem; border: 1px solid #b6d4fe;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>Budget Totale Contratto:</span> <strong>${formattatoreValuta(ctr.valore)}</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; color:#b05a00;"><span>Già Impegnato (RDA):</span> <strong>${formattatoreValuta(impegnatoRdaTotale)}</strong></div>
+                    <div style="display:flex; justify-content:space-between; padding-top:0.5rem; border-top:1px solid #b6d4fe; font-size:1.05rem; color:#0146bc;"><span>Da Ripartire (Residuo):</span> <strong id="proroga-residuo-helper">...</strong></div>
+                </div>`;
+
                 if (ctr.ripartizioni) {
+                    let budgetPerFunzione = {};
                     ctr.ripartizioni.forEach(r => {
                         const f = r.funzione || 'N/D';
-                        const speso = spesoPerFunzione[f] || 0;
-                        const valFormattato = r.importo ? String(r.importo).replace('.', ',') : '0,00';
+                        if (!budgetPerFunzione[f]) budgetPerFunzione[f] = 0;
+                        budgetPerFunzione[f] += (r.importo || 0);
+                    });
+
+                    Object.keys(budgetPerFunzione).forEach(f => {
+                        const impegnato = impegnatoPerFunzione[f] || 0;
+                        const valFormattato = budgetPerFunzione[f] ? String(budgetPerFunzione[f].toFixed(2)).replace('.', ',') : '0,00';
                         
                         listaRip.innerHTML += `
                             <div class="proroga-row">
-                                <strong style="flex:1;">${f} <span style="font-size:0.75rem; font-weight:normal;">(Anno: ${r.anno})</span></strong>
-                                <span style="flex:1; font-size:0.85rem; color:var(--brand-blue);">Speso (VAP): ${formattatoreValuta(speso)}</span>
+                                <strong style="flex:1;">${f}</strong>
+                                <span style="flex:1; font-size:0.85rem; color:var(--brand-blue);">Impegnato (RDA): ${formattatoreValuta(impegnato)}</span>
                                 <input type="hidden" class="p-funz" value="${f}">
-                                <input type="hidden" class="p-anno" value="${r.anno}">
-                                <input type="hidden" class="p-minimo" value="${speso}">
+                                <input type="hidden" class="p-anno" value="">
+                                <input type="hidden" class="p-minimo" value="${impegnato}">
                                 <div style="flex:1; display:flex; flex-direction:column;">
                                     <label style="font-size:0.7rem; color:var(--text-muted);">Nuovo Budget Assoluto</label>
                                     <input type="text" inputmode="decimal" class="p-importo" oninput="calcolaQuadraturaProroga()" style="padding:0.5rem; border-radius:4px; border:1px solid #ccc; width:100%;" value="${valFormattato}">
@@ -959,8 +972,7 @@
                 const minimo = parseFloat(row.querySelector('.p-minimo').value) || 0;
                 somma += importo;
                 
-                // Tolleranza per arrotondamenti decimali
-                if (importo < (minimo - 0.01)) { 
+                if (importo < (minimo - 0.01)) {
                     valid = false;
                     row.querySelector('.p-importo').style.borderColor = '#d93025';
                     row.querySelector('.p-importo').style.backgroundColor = '#ffebeb';
@@ -972,12 +984,23 @@
 
             const btn = document.getElementById('btn-salva-proroga');
             const badge = document.getElementById('proroga-status');
+            const residuoHelper = document.getElementById('proroga-residuo-helper');
+            
+            if (residuoHelper) {
+                const residuo = totaleContratto - somma;
+                residuoHelper.textContent = formattatoreValuta(residuo);
+                residuoHelper.style.color = Math.abs(residuo) < 0.01 ? '#137333' : (residuo < 0 ? '#d93025' : '#0146bc');
+            }
+
+            const pAvviso = document.querySelector('#proroga-ripartizioni-container p');
+            if (pAvviso) pAvviso.style.display = 'none';
             
             if (valid && Math.abs(totaleContratto - somma) < 0.01) {
                 badge.textContent = "Budget Quadrato"; badge.style.background = "#e6f4ea"; badge.style.color = "#137333";
                 btn.disabled = false;
             } else {
-                badge.textContent = `Scostamento / Valore non valido`; badge.style.background = "#fff4e5"; badge.style.color = "#b05a00";
+                badge.textContent = !valid ? "Errore: inferiore a RDA" : `Scostamento rilevato`; 
+                badge.style.background = "#fff4e5"; badge.style.color = "#b05a00";
                 btn.disabled = true;
             }
         }

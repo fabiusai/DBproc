@@ -368,37 +368,148 @@
                 document.getElementById('cfg-mia-funzione').value = appData.config.miaFunzione || '';
                 document.getElementById('cfg-altre-funzioni').value = (appData.config.altreFunzioni || []).join(', ');
             }
+            
+            const formGridImpostazioni = document.querySelector('#impostazioni .form-grid');
+            if (formGridImpostazioni && !document.getElementById('cfg-rinomina-vecchio')) {
+                const rinominaTool = document.createElement('div');
+                rinominaTool.style.cssText = "grid-column: 1 / -1; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-color);";
+                rinominaTool.innerHTML = `
+                    <h4 style="margin-bottom: 1rem; color: var(--brand-blue);">Gestione Funzioni (Rinomina / Elimina)</h4>
+                    <div class="form-grid" style="align-items: flex-end; margin-bottom: 1rem;">
+                        <div class="input-group">
+                            <label>Nuova Funzione</label>
+                            <input type="text" id="cfg-aggiungi-nuova" placeholder="Es. Marketing">
+                        </div>
+                        <div>
+                            <button class="btn btn-outline" onclick="aggiungiFunzioneGlobale()">+ Aggiungi</button>
+                        </div>
+                    </div>
+                    <div class="form-grid" style="align-items: flex-end;">
+                        <div class="input-group">
+                            <label>Seleziona Funzione</label>
+                            <select id="cfg-rinomina-vecchio"></select>
+                        </div>
+                        <div class="input-group">
+                            <label>Nuovo Nome (per rinominare)</label>
+                            <input type="text" id="cfg-rinomina-nuovo" placeholder="Es. Nuovo Nome">
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-yellow" onclick="rinominaFunzioneGlobale(this)">Rinomina</button>
+                            <button class="btn" style="background-color: #d93025;" onclick="eliminaFunzioneGlobale(this)">🗑️ Elimina</button>
+                        </div>
+                    </div>
+                `;
+                formGridImpostazioni.parentElement.insertBefore(rinominaTool, formGridImpostazioni.nextSibling);
+            }
+            
+            aggiornaSelectRinomina();
             aggiungiRigaBudget(); calcolaQuadratura(); renderDashboard();
         };
 
         /* --- CONFIGURAZIONE --- */
         function salvaConfigurazione() {
-            const vecchiaMiaFunzione = appData.config.miaFunzione;
-            const nuovaMiaFunzione = document.getElementById('cfg-mia-funzione').value.trim();
-            
-            appData.config.miaFunzione = nuovaMiaFunzione;
+            appData.config.miaFunzione = document.getElementById('cfg-mia-funzione').value.trim();
             appData.config.altreFunzioni = document.getElementById('cfg-altre-funzioni').value.split(',').map(s => s.trim()).filter(s => s !== '');
-            
-            if (vecchiaMiaFunzione && vecchiaMiaFunzione !== nuovaMiaFunzione) {
-                appData.contratti.forEach(c => {
-                    if (c.funzioneGestore === vecchiaMiaFunzione) c.funzioneGestore = nuovaMiaFunzione;
-                    if (c.ripartizioni) {
-                        c.ripartizioni.forEach(r => {
-                            if (r.funzione === vecchiaMiaFunzione) r.funzione = nuovaMiaFunzione;
-                        });
-                    }
-                });
-                
-                appData.ordini.forEach(o => {
-                    if (o.funzione === vecchiaMiaFunzione) o.funzione = nuovaMiaFunzione;
-                });
-                
-                appData.vap.forEach(v => {
-                    if (v.funzione === vecchiaMiaFunzione) v.funzione = nuovaMiaFunzione;
-                });
-            }
-            
             salvaDati();
+            aggiornaSelectRinomina();
+        }
+
+        function aggiornaSelectRinomina() {
+            const sel = document.getElementById('cfg-rinomina-vecchio');
+            if(!sel) return;
+            let opts = '<option value="">-- Seleziona --</option>';
+            let allFunzioni = new Set();
+            if(appData.config.miaFunzione) allFunzioni.add(appData.config.miaFunzione);
+            if(appData.config.altreFunzioni) appData.config.altreFunzioni.forEach(f => allFunzioni.add(f));
+            appData.ordini.forEach(o => { if(o.funzione) allFunzioni.add(o.funzione); });
+            appData.vap.forEach(v => { if(v.funzione) allFunzioni.add(v.funzione); });
+            appData.contratti.forEach(c => {
+                if(c.funzioneGestore) allFunzioni.add(c.funzioneGestore);
+                if(c.ripartizioni) c.ripartizioni.forEach(r => { if(r.funzione) allFunzioni.add(r.funzione); });
+            });
+            Array.from(allFunzioni).sort().forEach(f => { opts += `<option value="${f}">${f}</option>`; });
+            sel.innerHTML = opts;
+        }
+
+        function aggiungiFunzioneGlobale() {
+            const nuovaFunzione = document.getElementById('cfg-aggiungi-nuova').value.trim();
+            if(!nuovaFunzione) return;
+            if(!appData.config.altreFunzioni) appData.config.altreFunzioni = [];
+            if(appData.config.miaFunzione !== nuovaFunzione && !appData.config.altreFunzioni.includes(nuovaFunzione)) {
+                appData.config.altreFunzioni.push(nuovaFunzione);
+                document.getElementById('cfg-altre-funzioni').value = appData.config.altreFunzioni.join(', ');
+                salvaDati();
+                aggiornaSelectRinomina();
+                document.getElementById('cfg-aggiungi-nuova').value = '';
+                alert("Funzione aggiunta con successo!");
+            }
+        }
+
+        function eliminaFunzioneGlobale(btn) {
+            const funcDaEliminare = document.getElementById('cfg-rinomina-vecchio').value;
+            if(!funcDaEliminare) return;
+            if(!confirm(`Sei sicuro di voler eliminare la funzione "${funcDaEliminare}"? Tutti gli elementi associati passeranno a "Funzione da assegnare".`)) return;
+            
+            withFeedback(btn, "Eliminazione...", "Eliminata!", "🗑️ Elimina", () => {
+                const defaultName = "Funzione da assegnare";
+                
+                if (appData.config.miaFunzione === funcDaEliminare) {
+                    appData.config.miaFunzione = "";
+                    document.getElementById('cfg-mia-funzione').value = "";
+                } else if (appData.config.altreFunzioni.includes(funcDaEliminare)) {
+                    appData.config.altreFunzioni = appData.config.altreFunzioni.filter(f => f !== funcDaEliminare);
+                    document.getElementById('cfg-altre-funzioni').value = appData.config.altreFunzioni.join(', ');
+                }
+
+                appData.contratti.forEach(c => {
+                    if (c.funzioneGestore === funcDaEliminare) c.funzioneGestore = defaultName;
+                    if (c.ripartizioni) c.ripartizioni.forEach(r => { if (r.funzione === funcDaEliminare) r.funzione = defaultName; });
+                });
+                
+                appData.ordini.forEach(o => { if (o.funzione === funcDaEliminare) o.funzione = defaultName; });
+                appData.vap.forEach(v => { if (v.funzione === funcDaEliminare) v.funzione = defaultName; });
+
+                salvaDati();
+                aggiornaSelectRinomina();
+                
+                renderDashboard();
+                if(document.getElementById('tab-budget').classList.contains('active-segment')) renderBudgetAnnuale();
+            });
+        }
+
+        function rinominaFunzioneGlobale(btn) {
+            const vecchioNome = document.getElementById('cfg-rinomina-vecchio').value;
+            const nuovoNome = document.getElementById('cfg-rinomina-nuovo').value.trim();
+            if(!vecchioNome || !nuovoNome) return;
+            if(vecchioNome === nuovoNome) return;
+            
+            withFeedback(btn, "Aggiornamento...", "Database Aggiornato!", "Rinomina", () => {
+                if (appData.config.miaFunzione === vecchioNome) {
+                    appData.config.miaFunzione = nuovoNome;
+                    document.getElementById('cfg-mia-funzione').value = nuovoNome;
+                } else if (appData.config.altreFunzioni.includes(vecchioNome)) {
+                    appData.config.altreFunzioni = appData.config.altreFunzioni.map(f => f === vecchioNome ? nuovoNome : f);
+                    document.getElementById('cfg-altre-funzioni').value = appData.config.altreFunzioni.join(', ');
+                } else if (!appData.config.altreFunzioni.includes(nuovoNome) && appData.config.miaFunzione !== nuovoNome) {
+                    appData.config.altreFunzioni.push(nuovoNome);
+                    document.getElementById('cfg-altre-funzioni').value = appData.config.altreFunzioni.join(', ');
+                }
+
+                appData.contratti.forEach(c => {
+                    if (c.funzioneGestore === vecchioNome) c.funzioneGestore = nuovoNome;
+                    if (c.ripartizioni) c.ripartizioni.forEach(r => { if (r.funzione === vecchioNome) r.funzione = nuovoNome; });
+                });
+                
+                appData.ordini.forEach(o => { if (o.funzione === vecchioNome) o.funzione = nuovoNome; });
+                appData.vap.forEach(v => { if (v.funzione === vecchioNome) v.funzione = nuovoNome; });
+
+                salvaDati();
+                aggiornaSelectRinomina();
+                document.getElementById('cfg-rinomina-nuovo').value = '';
+                
+                renderDashboard();
+                if(document.getElementById('tab-budget').classList.contains('active-segment')) renderBudgetAnnuale();
+            });
         }
 
         function getOptionsFunzioni() {

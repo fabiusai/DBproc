@@ -615,15 +615,17 @@
             
             let html = '<div style="margin-bottom: 1rem; text-align: right;"><button class="btn btn-yellow btn-small" onclick="esportaPdfContrattiAttivi()">📄 Esporta PDF</button></div>';
             html += '<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">';
-            html += '<tr style="text-align:left; border-bottom:2px solid var(--border-color);"><th style="padding:10px;">Fornitore</th><th>Scadenza</th><th style="text-align:right;">Valore Totale</th><th style="text-align:right;">Speso (VAP)</th><th style="text-align:right;">Residuo</th></tr>';
+            html += '<tr style="text-align:left; border-bottom:2px solid var(--border-color);"><th style="padding:10px;">Fornitore</th><th>Data iniziale</th><th>Scadenza</th><th style="text-align:right;">Valore Totale</th><th style="text-align:right;">Speso (VAP)</th><th style="text-align:right;">Residuo</th></tr>';
             
             attivi.forEach(c => {
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
                 const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
                 const isProrogato = (c.proroghe && c.proroghe.length > 0) ? `<span style="color:var(--brand-blue); font-size:0.8rem; font-weight:bold; margin-left:5px;">(P)</span>` : '';
+                const inDefinizione = (c.dataInizio > oggi) ? `<span style="background-color:#f0f0f5; color:var(--text-muted); font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:4px; font-weight:bold; margin-left:0.5rem; vertical-align:middle; border: 1px solid var(--border-color);">IN DEFINIZIONE</span>` : '';
                 
                 html += `<tr style="border-bottom:1px solid var(--border-color);">
-                    <td style="padding:10px;"><strong>${c.fornitore}</strong><br><small>${c.numero}</small></td>
+                    <td style="padding:10px;"><strong style="cursor:pointer; color:var(--brand-blue); text-decoration:underline;" onclick="apriDettaglioContratto('${c.id}')" title="Apri scheda Gestisci Spese">${c.fornitore}</strong> ${inDefinizione}<br><small>${c.numero}</small></td>
+                    <td>${formattatoreDataIT(c.dataInizio)}</td>
                     <td>${formattatoreDataIT(c.dataFine)} ${isProrogato}</td>
                     <td style="text-align:right;">${formattatoreValuta(c.valore)}</td>
                     <td style="text-align:right; color:var(--brand-blue);">${formattatoreValuta(speso)}</td>

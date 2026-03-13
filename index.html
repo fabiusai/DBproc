@@ -633,7 +633,10 @@
             const thStyle = "padding:10px; cursor:pointer; user-select:none; transition: color 0.2s;";
             const getIcon = (col) => sortBy === col ? (sortAsc ? ' <small>▲</small>' : ' <small>▼</small>') : '';
             
-            let html = '<div style="margin-bottom: 1rem; text-align: right;"><button class="btn btn-yellow btn-small" onclick="esportaPdfContrattiAttivi()">📄 Esporta PDF</button></div>';
+            let html = '<div style="margin-bottom: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem;">';
+            html += '<button class="btn btn-yellow btn-small" onclick="esportaPdfContrattiAttivi()">📄 Esporta PDF</button>';
+            html += '<button class="btn btn-small" style="background-color: #217346; color: white;" onclick="esportaExcelContrattiAttivi()">📊 Esporta Excel</button>';
+            html += '</div>';
             html += '<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">';
             html += `<tr style="text-align:left; border-bottom:2px solid var(--border-color);">
                 <th style="${thStyle}" onclick="renderContrattiAttivi('fornitore', ${sortBy==='fornitore' ? !sortAsc : true})">Fornitore${getIcon('fornitore')}</th>
@@ -722,6 +725,43 @@
             printWin.document.open();
             printWin.document.write(html);
             printWin.document.close();
+        }
+
+        function esportaExcelContrattiAttivi() {
+            const oggi = new Date().toISOString().split('T')[0];
+            let attivi = appData.contratti.filter(c => c.dataFine >= oggi).map(c => {
+                const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
+                const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
+                return { ...c, speso, residuo: (c.valore || 0) - speso };
+            });
+
+            if(attivi.length === 0) { alert("Nessun dato da esportare."); return; }
+
+            let csvContent = "Fornitore;Numero Identificativo;Data Inizio;Scadenza;Valore Totale;Speso (VAP);Residuo\n";
+            
+            attivi.forEach(c => {
+                let row = [
+                    `"${(c.fornitore || '').replace(/"/g, '""')}"`,
+                    `"${(c.numero || '').replace(/"/g, '""')}"`,
+                    formattatoreDataIT(c.dataInizio),
+                    formattatoreDataIT(c.dataFine),
+                    (c.valore || 0).toFixed(2).replace('.', ','),
+                    (c.speso || 0).toFixed(2).replace('.', ','),
+                    (c.residuo || 0).toFixed(2).replace('.', ',')
+                ];
+                csvContent += row.join(";") + "\n";
+            });
+
+            // Aggiungo BOM per permettere a Excel di leggere i caratteri speciali correttamente
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Contratti_Attivi_${oggi}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function renderBudgetAnnuale() {

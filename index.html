@@ -651,13 +651,27 @@
                 const isProrogato = (c.proroghe && c.proroghe.length > 0) ? `<span style="color:var(--brand-blue); font-size:0.8rem; font-weight:bold; margin-left:5px;">(P)</span>` : '';
                 const inDefinizione = (c.dataInizio > oggi) ? `<span style="background-color:#f0f0f5; color:var(--text-muted); font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:4px; font-weight:bold; margin-left:0.5rem; vertical-align:middle; border: 1px solid var(--border-color);">IN DEFINIZIONE</span>` : '';
                 
+                let dettaglioQuote = '';
+                if (c.tipo === 'quadro' && c.ripartizioni && c.ripartizioni.length > 0) {
+                    dettaglioQuote = '<div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 4px;">';
+                    let quoteMap = {};
+                    c.ripartizioni.forEach(r => {
+                        const f = r.funzione || 'N/D';
+                        quoteMap[f] = (quoteMap[f] || 0) + (r.importo || 0);
+                    });
+                    for (const [f, imp] of Object.entries(quoteMap)) {
+                        dettaglioQuote += `<div style="display:flex; justify-content:flex-end; gap:8px;"><span>${f}:</span><strong style="color:var(--text-main);">${formattatoreValuta(imp)}</strong></div>`;
+                    }
+                    dettaglioQuote += '</div>';
+                }
+
                 html += `<tr style="border-bottom:1px solid var(--border-color);">
-                    <td style="padding:10px;"><strong style="cursor:pointer; color:var(--brand-blue);" onclick="apriDettaglioContratto('${c.id}')" title="Apri scheda Gestisci Spese">${c.fornitore}</strong> ${inDefinizione}<br><small>${c.numero}</small></td>
-                    <td>${formattatoreDataIT(c.dataInizio)}</td>
-                    <td>${formattatoreDataIT(c.dataFine)} ${isProrogato}</td>
-                    <td style="text-align:right;">${formattatoreValuta(c.valore)}</td>
-                    <td style="text-align:right; color:var(--brand-blue);">${formattatoreValuta(c.speso)}</td>
-                    <td style="text-align:right; font-weight:600;">${formattatoreValuta(c.residuo)}</td>
+                    <td style="padding:10px; vertical-align:top;"><strong style="cursor:pointer; color:var(--brand-blue);" onclick="apriDettaglioContratto('${c.id}')" title="Apri scheda Gestisci Spese">${c.fornitore}</strong> ${inDefinizione}<br><small>${c.numero}</small></td>
+                    <td style="vertical-align:top; padding-top:10px;">${formattatoreDataIT(c.dataInizio)}</td>
+                    <td style="vertical-align:top; padding-top:10px;">${formattatoreDataIT(c.dataFine)} ${isProrogato}</td>
+                    <td style="text-align:right; vertical-align:top; padding-top:10px;">${formattatoreValuta(c.valore)}${dettaglioQuote}</td>
+                    <td style="text-align:right; color:var(--brand-blue); vertical-align:top; padding-top:10px;">${formattatoreValuta(c.speso)}</td>
+                    <td style="text-align:right; font-weight:600; vertical-align:top; padding-top:10px;">${formattatoreValuta(c.residuo)}</td>
                 </tr>`;
             });
             html += '</table>';
@@ -689,6 +703,7 @@
                     <thead>
                         <tr>
                             <th>Fornitore</th>
+                            <th>Data iniziale</th>
                             <th>Scadenza</th>
                             <th style="text-align:right;">Valore Totale</th>
                             <th style="text-align:right;">Speso (VAP)</th>
@@ -702,12 +717,27 @@
                 const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
                 const isProrogato = (c.proroghe && c.proroghe.length > 0) ? `<span style="color:#0146bc; font-size:10px;">[PROROGATO]</span>` : '';
                 
+                let dettaglioQuotePdf = '';
+                if (c.tipo === 'quadro' && c.ripartizioni && c.ripartizioni.length > 0) {
+                    dettaglioQuotePdf = '<div style="margin-top: 5px; font-size: 9px; color: #666; border-top: 1px dashed #ccc; padding-top: 3px;">';
+                    let quoteMap = {};
+                    c.ripartizioni.forEach(r => {
+                        const f = r.funzione || 'N/D';
+                        quoteMap[f] = (quoteMap[f] || 0) + (r.importo || 0);
+                    });
+                    for (const [f, imp] of Object.entries(quoteMap)) {
+                        dettaglioQuotePdf += `<div style="display:flex; justify-content:flex-end; gap:5px;"><span>${f}:</span><strong style="color:#333;">${formattatoreValuta(imp)}</strong></div>`;
+                    }
+                    dettaglioQuotePdf += '</div>';
+                }
+
                 html += `<tr>
                     <td><strong>${c.fornitore || 'N/D'}</strong><br><small style="color:#666;">${c.numero || 'N/D'}</small></td>
+                    <td>${formattatoreDataIT(c.dataInizio)}</td>
                     <td>${formattatoreDataIT(c.dataFine)} ${isProrogato}</td>
-                    <td style="text-align:right;">${formattatoreValuta(c.valore)}</td>
-                    <td style="text-align:right; color:#b05a00;">${formattatoreValuta(speso)}</td>
-                    <td style="text-align:right; font-weight:bold;">${formattatoreValuta(c.valore - speso)}</td>
+                    <td style="text-align:right; vertical-align:top;">${formattatoreValuta(c.valore)}${dettaglioQuotePdf}</td>
+                    <td style="text-align:right; color:#b05a00; vertical-align:top;">${formattatoreValuta(speso)}</td>
+                    <td style="text-align:right; font-weight:bold; vertical-align:top;">${formattatoreValuta(c.valore - speso)}</td>
                 </tr>`;
             });
 
@@ -737,15 +767,30 @@
 
             if(attivi.length === 0) { alert("Nessun dato da esportare."); return; }
 
-            let csvContent = "Fornitore;Numero Identificativo;Data Inizio;Scadenza;Valore Totale;Speso (VAP);Residuo\n";
+            let csvContent = "Fornitore;Numero Identificativo;Data Inizio;Scadenza;Valore Totale;Dettaglio Quote (Contratti Quadro);Speso (VAP);Residuo\n";
             
             attivi.forEach(c => {
+                let dettaglioQuoteTesto = "";
+                if (c.tipo === 'quadro' && c.ripartizioni && c.ripartizioni.length > 0) {
+                    let quoteMap = {};
+                    c.ripartizioni.forEach(r => {
+                        const f = r.funzione || 'N/D';
+                        quoteMap[f] = (quoteMap[f] || 0) + (r.importo || 0);
+                    });
+                    let quoteArr = [];
+                    for (const [f, imp] of Object.entries(quoteMap)) {
+                        quoteArr.push(`${f}: ${formattatoreValuta(imp)}`);
+                    }
+                    dettaglioQuoteTesto = quoteArr.join(" | ");
+                }
+
                 let row = [
                     `"${(c.fornitore || '').replace(/"/g, '""')}"`,
                     `"${(c.numero || '').replace(/"/g, '""')}"`,
                     formattatoreDataIT(c.dataInizio),
                     formattatoreDataIT(c.dataFine),
                     (c.valore || 0).toFixed(2).replace('.', ','),
+                    `"${dettaglioQuoteTesto.replace(/"/g, '""')}"`,
                     (c.speso || 0).toFixed(2).replace('.', ','),
                     (c.residuo || 0).toFixed(2).replace('.', ',')
                 ];

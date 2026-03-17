@@ -546,7 +546,15 @@
                 const blob = new Blob([dataStr], { type: "application/json" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url; a.download = `backup_contratti.json`;
+                
+                const d = new Date();
+                const aaaa = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const gg = String(d.getDate()).padStart(2, '0');
+                const hh = String(d.getHours()).padStart(2, '0');
+                const min = String(d.getMinutes()).padStart(2, '0');
+                
+                a.href = url; a.download = `backup_contratti_${aaaa}_${mm}_${gg}_${hh}_${min}.json`;
                 document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
             });
         }

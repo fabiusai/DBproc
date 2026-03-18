@@ -1705,7 +1705,124 @@
         }
 
         /* --- VAP LOGIC --- */
+        let vapDettaglioCorrente = null;
+
+        function initVapDettaglioUI() {
+            if (!document.getElementById('vap-dettaglio-quadro')) {
+                const s = document.createElement('script');
+                s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+                document.head.appendChild(s);
+
+                const div = document.createElement('div');
+                div.id = 'vap-dettaglio-quadro';
+                div.style.cssText = "margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; display: none;";
+                div.innerHTML = `
+                    <style>
+                        .vap-t-wrapper { overflow-x: auto; margin-top: 1rem; }
+                        .vap-t { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+                        .vap-t th, .vap-t td { border: 1px solid var(--border-color); padding: 6px; text-align: left; }
+                        .vap-t th { background: var(--bg-color); font-weight: 600; }
+                    </style>
+                    <h4 style="margin-bottom: 0.5rem;">Dettaglio Attività (Contratto Quadro)</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Carica il Listino in formato JSON e i Dati Attività in formato Excel (.xlsx, .csv).</p>
+                    <div style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <div class="input-group" style="flex:1; min-width: 200px;">
+                            <label>Listino (JSON)</label>
+                            <input type="file" id="vap-file-json" accept=".json">
+                        </div>
+                        <div class="input-group" style="flex:1; min-width: 200px;">
+                            <label>Dati Attività (Excel)</label>
+                            <input type="file" id="vap-file-excel" accept=".xlsx, .xls, .csv">
+                        </div>
+                        <button class="btn btn-outline" onclick="elaboraDatiVap()">Elabora Dati</button>
+                    </div>
+                    <div id="vap-tabelle-risultato"></div>
+                `;
+                const modalGrid = document.querySelector('#modal-vap .form-grid');
+                modalGrid.parentElement.insertBefore(div, modalGrid.nextElementSibling.nextElementSibling);
+                document.querySelector('#modal-vap .modal-content').style.maxWidth = "1000px";
+            }
+            document.getElementById('vap-file-json').value = '';
+            document.getElementById('vap-file-excel').value = '';
+            document.getElementById('vap-tabelle-risultato').innerHTML = '';
+            vapDettaglioCorrente = null;
+        }
+
+        window.elaboraDatiVap = function() {
+            const fJson = document.getElementById('vap-file-json').files[0];
+            const fExcel = document.getElementById('vap-file-excel').files[0];
+            if (!fJson || !fExcel) return alert("Carica sia il Listino JSON che il file Excel.");
+            if (!window.XLSX) return alert("Libreria in caricamento, riprova tra qualche secondo.");
+
+            const readerJson = new FileReader();
+            readerJson.onload = e => {
+                try {
+                    const listino = JSON.parse(e.target.result);
+                    const costi = {};
+                    listino.items.forEach(i => costi[i.tow] = parseFloat(i.unit_cost.replace('€','').replace(/\./g,'').replace(',','.').trim()) || 0);
+
+                    const readerExcel = new FileReader();
+                    readerExcel.onload = ex => {
+                        const wb = XLSX.read(new Uint8Array(ex.target.result), {type: 'array'});
+                        const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval: ""});
+                        
+                        let totaleAssoluto = 0;
+                        const summary = {};
+                        Object.keys(costi).forEach(t => summary[t] = { qty: 0, totale: 0 });
+
+                        rows.forEach(r => {
+                            let valueRiga = 0;
+                            Object.keys(costi).forEach(tow => {
+                                let qty = parseFloat(r[tow]) || 0;
+                                let cTot = qty * costi[tow];
+                                valueRiga += cTot;
+                                if(summary[tow]) { summary[tow].qty += qty; summary[tow].totale += cTot; }
+                            });
+                            r['Value €'] = valueRiga;
+                            totaleAssoluto += valueRiga;
+                        });
+
+                        vapDettaglioCorrente = { rows, summary, totaleAssoluto };
+                        renderTabelleVap();
+                        document.getElementById('vap-valore').value = String(totaleAssoluto.toFixed(2)).replace('.', ',');
+                    };
+                    readerExcel.readAsArrayBuffer(fExcel);
+                } catch(err) { alert("Errore lettura JSON."); }
+            };
+            readerJson.readAsText(fJson);
+        };
+
+        function renderTabelleVap() {
+            if(!vapDettaglioCorrente) return;
+            const tows = Object.keys(vapDettaglioCorrente.summary);
+            
+            let h = '<h5>Dettaglio Completo Attività</h5><div class="vap-t-wrapper"><table class="vap-t">';
+            h += '<tr><th>#</th><th>Attività</th><th>Data Richiesta</th><th>Data Delivery</th>';
+            tows.forEach(t => h += `<th>${t}</th>`);
+            h += '<th>Value €</th><th>Note</th><th>Buono Cons.</th><th>Rif. Fattura</th><th>Data Fattura</th></tr>';
+            
+            vapDettaglioCorrente.rows.forEach(r => {
+                h += '<tr>';
+                h += `<td>${r['#']||''}</td><td>${r['Attività']||''}</td><td>${r['Data Richiesta']||''}</td><td>${r['Data Delivery']||''}</td>`;
+                tows.forEach(t => h += `<td>${r[t]||'0'}</td>`);
+                h += `<td><strong>${formattatoreValuta(r['Value €'])}</strong></td><td>${r['Note']||''}</td><td>${r['Buono di Consegna']||''}</td><td>${r['Riferimento Fattura']||''}</td><td>${r['Data Fattura']||''}</td></tr>`;
+            });
+            h += '</table></div>';
+
+            h += '<h5 style="margin-top:1.5rem;">Riepilogo Totali TOW</h5><table class="vap-t" style="margin-top:0.5rem; max-width: 500px;"><tr><th style="background:var(--brand-blue); color:#fff;">TOW</th><th style="background:var(--brand-blue); color:#fff;">Quantità Totale</th><th style="background:var(--brand-blue); color:#fff;">Valore Totale</th></tr>';
+            tows.forEach(t => {
+                let s = vapDettaglioCorrente.summary[t];
+                if(s.qty > 0) h += `<tr><td>${t}</td><td>${s.qty}</td><td>${formattatoreValuta(s.totale)}</td></tr>`;
+            });
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td><strong style="font-size: 1.1em;">${formattatoreValuta(vapDettaglioCorrente.totaleAssoluto)}</strong></td></tr></table>`;
+            
+            document.getElementById('vap-tabelle-risultato').innerHTML = h;
+        }
+
         function predisponiVapNuovo(idOrdine, labelRda, tipoContratto) {
+            initVapDettaglioUI();
+            document.getElementById('vap-dettaglio-quadro').style.display = tipoContratto === 'quadro' ? 'block' : 'none';
+            
             editVapId = null; document.querySelectorAll('#modal-vap input[type="text"], #modal-vap input[type="number"], #modal-vap input[type="date"]').forEach(i => i.value = '');
             document.getElementById('vap-assestamento').checked = false; document.getElementById('vap-id-ordine').value = idOrdine;
             document.getElementById('vap-ordine-ref').innerText = `Riferimento: ${labelRda}`;
@@ -1723,9 +1840,14 @@
         }
 
         function caricaVapPerModifica(id) {
+            initVapDettaglioUI();
             editVapId = id; const v = appData.vap.find(vap => vap.id === id); if(!v) return;
             const ord = appData.ordini.find(o => o.id === v.idOrdine);
+            const ctr = appData.contratti.find(c => c.id === ord.idContratto);
             const isMia = ord.funzione === appData.config.miaFunzione;
+            
+            document.getElementById('vap-dettaglio-quadro').style.display = (ctr && ctr.tipo === 'quadro') ? 'block' : 'none';
+            if(v.dettaglioDati) { vapDettaglioCorrente = v.dettaglioDati; renderTabelleVap(); }
             
             document.getElementById('vap-id-ordine').value = v.idOrdine;
             document.getElementById('vap-campi-standard').style.display = 'contents';
@@ -1753,7 +1875,8 @@
                     valore: parseImporto(document.getElementById('vap-valore').value), 
                     anno: document.getElementById('vap-anno').value,
                     num: document.getElementById('vap-num').value,
-                    data: document.getElementById('vap-data').value
+                    data: document.getElementById('vap-data').value,
+                    dettaglioDati: vapDettaglioCorrente
                 };
                 
                 if(isMia) {

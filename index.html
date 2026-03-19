@@ -1802,7 +1802,7 @@
             readerJson.readAsText(fJson);
         };
 
-                function renderTabelleVap() {
+                                function renderTabelleVap() {
             if(!vapDettaglioCorrente) return;
             const tows = Object.keys(vapDettaglioCorrente.summary);
             
@@ -1819,35 +1819,80 @@
             });
             colsHtml += '</div></div>';
 
+            const formatCell = (val, colIdx, alignArr, isFirst, isStrong=false) => {
+                let str = String(val);
+                if (str.includes('€')) {
+                    str = '€ ' + str.replace(/€/g, '').trim();
+                }
+                let raw = str.replace(/<[^>]*>?/gm, '').trim();
+                if (isFirst) {
+                    if (str.includes('€')) alignArr[colIdx] = 'right';
+                    else if (raw.length <= 5) alignArr[colIdx] = 'center';
+                    else alignArr[colIdx] = 'left';
+                }
+                let align = alignArr[colIdx] || 'left';
+                let content = isStrong ? `<strong>${str}</strong>` : str;
+                return `<td style="text-align:${align};">${content}</td>`;
+            };
+
             let h = btnHtml + colsHtml + '<h5>Dettaglio Completo Attività</h5><div class="vap-t-wrapper"><table class="vap-t">';
-            h += '<tr><th>#</th><th>Attività</th><th>Data Richiesta</th><th>Data Delivery</th>';
-            tows.forEach(t => h += `<th>${t}</th>`);
-            h += '<th>Value €</th><th>Note</th><th>Buono Cons.</th><th>Rif. Fattura</th><th>Data Fattura</th></tr>';
+            h += '<tr><th style="text-align:center;">#</th><th style="text-align:center;">Attività</th><th style="text-align:center;">Data Richiesta</th><th style="text-align:center;">Data Delivery</th>';
+            tows.forEach(t => h += `<th style="text-align:center;">${t}</th>`);
+            h += '<th style="text-align:center;">Value €</th><th style="text-align:center;">Note</th><th style="text-align:center;">Buono Cons.</th><th style="text-align:center;">Rif. Fattura</th><th style="text-align:center;">Data Fattura</th></tr>';
             
-            vapDettaglioCorrente.rows.forEach(r => {
+            let alignDett = [];
+            vapDettaglioCorrente.rows.forEach((r, rowIdx) => {
                 h += '<tr>';
-                h += `<td>${r['#']||''}</td><td>${r['Attività']||''}</td><td>${r['Data Richiesta']||''}</td><td>${r['Data Delivery']||''}</td>`;
-                tows.forEach(t => h += `<td>${r[t]||'0'}</td>`);
-                h += `<td><strong>${formattatoreValuta(r['Value €'])}</strong></td><td>${r['Note']||''}</td><td>${r['Buono di Consegna']||''}</td><td>${r['Riferimento Fattura']||''}</td><td>${r['Data Fattura']||''}</td></tr>`;
+                const isFirst = rowIdx === 0;
+                let c = 0;
+                h += formatCell(r['#']||'', c++, alignDett, isFirst);
+                h += formatCell(r['Attività']||'', c++, alignDett, isFirst);
+                h += formatCell(r['Data Richiesta']||'', c++, alignDett, isFirst);
+                h += formatCell(r['Data Delivery']||'', c++, alignDett, isFirst);
+                tows.forEach(t => h += formatCell(r[t]||'0', c++, alignDett, isFirst));
+                h += formatCell(formattatoreValuta(r['Value €']), c++, alignDett, isFirst, true);
+                h += formatCell(r['Note']||'', c++, alignDett, isFirst);
+                h += formatCell(r['Buono di Consegna']||'', c++, alignDett, isFirst);
+                h += formatCell(r['Riferimento Fattura']||'', c++, alignDett, isFirst);
+                h += formatCell(r['Data Fattura']||'', c++, alignDett, isFirst);
+                h += '</tr>';
             });
             h += '</table></div>';
 
-            h += '<h5 style="margin-top:1.5rem;">Dati di sintesi VAP</h5><table class="vap-t" style="margin-top:0.5rem; max-width: 800px;"><tr><th style="background:var(--brand-blue); color:#fff;">TOW</th><th style="background:var(--brand-blue); color:#fff;">Descrizione</th><th style="background:var(--brand-blue); color:#fff;">Costo Unitario</th><th style="background:var(--brand-blue); color:#fff;">Quantità Totale</th><th style="background:var(--brand-blue); color:#fff;">Valore Totale</th></tr>';
+            h += '<h5 style="margin-top:1.5rem;">Dati di sintesi VAP</h5><table class="vap-t" style="margin-top:0.5rem; max-width: 800px;"><tr><th style="background:var(--brand-blue); color:#fff; text-align:center;">TOW</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Descrizione</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Costo Unitario</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Quantità Totale</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Valore Totale</th></tr>';
+            
+            let alignSint = [];
+            let rowIdxSint = 0;
             tows.forEach(t => {
                 let s = vapDettaglioCorrente.summary[t];
                 if(s.qty > 0) {
                     let listinoItem = (vapDettaglioCorrente.listinoItems || []).find(i => i.tow === t) || {};
                     let desc = listinoItem.description || listinoItem.descrizione || '';
                     let unitCost = listinoItem.unit_cost || '';
-                    h += `<tr><td>${t}</td><td>${desc}</td><td>${unitCost}</td><td>${s.qty}</td><td>${formattatoreValuta(s.totale)}</td></tr>`;
+                    
+                    h += '<tr>';
+                    const isFirst = rowIdxSint === 0;
+                    let c = 0;
+                    h += formatCell(t, c++, alignSint, isFirst);
+                    h += formatCell(desc, c++, alignSint, isFirst);
+                    h += formatCell(unitCost, c++, alignSint, isFirst);
+                    h += formatCell(s.qty, c++, alignSint, isFirst);
+                    h += formatCell(formattatoreValuta(s.totale), c++, alignSint, isFirst);
+                    h += '</tr>';
+                    rowIdxSint++;
                 }
             });
-            h += `<tr><td colspan="4" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td><strong style="font-size: 1.1em;">${formattatoreValuta(vapDettaglioCorrente.totaleAssoluto)}</strong></td></tr></table>`;
+            
+            let strTotale = String(formattatoreValuta(vapDettaglioCorrente.totaleAssoluto));
+            if (strTotale.includes('€')) {
+                strTotale = '€ ' + strTotale.replace(/€/g, '').trim();
+            }
+            h += `<tr><td colspan="4" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td style="text-align:right;"><strong style="font-size: 1.1em;">${strTotale}</strong></td></tr></table>`;
             
             document.getElementById('vap-tabelle-risultato').innerHTML = h;
         }
 
-        window.esportaVapExcel = function() {
+                window.esportaVapExcel = function() {
             if(!vapDettaglioCorrente || !window.XLSX) return;
             const tows = Object.keys(vapDettaglioCorrente.summary);
             
@@ -1857,14 +1902,59 @@
                 if(s.qty > 0) {
                     let listinoItem = (vapDettaglioCorrente.listinoItems || []).find(i => i.tow === t) || {};
                     let desc = listinoItem.description || listinoItem.descrizione || '';
-                    let unitCost = listinoItem.unit_cost || '';
-                    wsSintesiData.push([t, desc, unitCost, s.qty, s.totale]);
+                    let unitCost = String(listinoItem.unit_cost || '');
+                    if (unitCost.includes('€')) unitCost = '€ ' + unitCost.replace(/€/g, '').trim();
+                    
+                    let valTot = String(formattatoreValuta(s.totale));
+                    if (valTot.includes('€')) valTot = '€ ' + valTot.replace(/€/g, '').trim();
+
+                    wsSintesiData.push([t, desc, unitCost, s.qty, valTot]);
                 }
             });
-            wsSintesiData.push(["TOTALE ASSOLUTO", "", "", "", vapDettaglioCorrente.totaleAssoluto]);
+            let totAss = String(formattatoreValuta(vapDettaglioCorrente.totaleAssoluto));
+            if (totAss.includes('€')) totAss = '€ ' + totAss.replace(/€/g, '').trim();
+            wsSintesiData.push(["TOTALE ASSOLUTO", "", "", "", totAss]);
             const wsSintesi = XLSX.utils.aoa_to_sheet(wsSintesiData);
 
-            const wsDettaglio = XLSX.utils.json_to_sheet(vapDettaglioCorrente.rows);
+            let formattedRows = vapDettaglioCorrente.rows.map(r => {
+                let newRow = {};
+                Object.keys(r).forEach(k => {
+                    let val = r[k];
+                    if (k === 'Value €') val = formattatoreValuta(val);
+                    let strVal = String(val);
+                    if (strVal.includes('€')) strVal = '€ ' + strVal.replace(/€/g, '').trim();
+                    newRow[k] = strVal;
+                });
+                return newRow;
+            });
+            const wsDettaglio = XLSX.utils.json_to_sheet(formattedRows);
+
+            const applyAlignments = (ws) => {
+                if(!ws['!ref']) return;
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                let alignArr = [];
+                for(let C = range.s.c; C <= range.e.c; ++C) {
+                    for(let R = range.s.r; R <= range.e.r; ++R) {
+                        const cell = ws[XLSX.utils.encode_cell({c:C, r:R})];
+                        if(!cell) continue;
+                        if(!cell.s) cell.s = {};
+                        
+                        let val = String(cell.v || '').trim();
+                        if(R === 0) {
+                            cell.s.alignment = { horizontal: "center" };
+                        } else {
+                            if(R === 1) { 
+                                if(val.includes('€')) alignArr[C] = 'right';
+                                else if(val.length <= 5) alignArr[C] = 'center';
+                                else alignArr[C] = 'left';
+                            }
+                            cell.s.alignment = { horizontal: alignArr[C] || 'left' };
+                        }
+                    }
+                }
+            };
+            applyAlignments(wsSintesi);
+            applyAlignments(wsDettaglio);
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, wsSintesi, "Dati di Sintesi");
@@ -1880,6 +1970,22 @@
             const checkboxes = document.querySelectorAll('.pdf-col-cb');
             const selectedCols = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
 
+            const formatCell = (val, colIdx, alignArr, isFirst, isStrong=false) => {
+                let str = String(val);
+                if (str.includes('€')) {
+                    str = '€ ' + str.replace(/€/g, '').trim();
+                }
+                let raw = str.replace(/<[^>]*>?/gm, '').trim();
+                if (isFirst) {
+                    if (str.includes('€')) alignArr[colIdx] = 'right';
+                    else if (raw.length <= 5) alignArr[colIdx] = 'center';
+                    else alignArr[colIdx] = 'left';
+                }
+                let align = alignArr[colIdx] || 'left';
+                let content = isStrong ? `<strong>${str}</strong>` : str;
+                return `<td style="text-align:${align};">${content}</td>`;
+            };
+
             let html = `<!DOCTYPE html>
             <html lang="it">
             <head>
@@ -1891,7 +1997,7 @@
                     h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin-bottom: 15px; font-size: 18px; }
                     .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                     .table th, .table td { border: 1px solid #d2d2d7; padding: 6px; text-align: left; vertical-align: middle; }
-                    .table th { background-color: #0146bc; color: white; }
+                    .table th { background-color: #0146bc; color: white; text-align: center; }
                     .table tr:nth-child(even) { background-color: #f9f9f9; }
                     .page-break { page-break-before: always; }
                 </style>
@@ -1902,16 +2008,32 @@
                     <thead><tr><th>TOW</th><th>Descrizione</th><th>Costo Unitario</th><th>Quantità Totale</th><th>Valore Totale</th></tr></thead>
                     <tbody>`;
             
+            let alignSint = [];
+            let rowIdxSint = 0;
             tows.forEach(t => {
                 let s = vapDettaglioCorrente.summary[t];
                 if(s.qty > 0) {
                     let listinoItem = (vapDettaglioCorrente.listinoItems || []).find(i => i.tow === t) || {};
                     let desc = listinoItem.description || listinoItem.descrizione || '';
                     let unitCost = listinoItem.unit_cost || '';
-                    html += `<tr><td>${t}</td><td>${desc}</td><td>${unitCost}</td><td>${s.qty}</td><td>${formattatoreValuta(s.totale)}</td></tr>`;
+                    
+                    html += `<tr>`;
+                    const isFirst = rowIdxSint === 0;
+                    let c = 0;
+                    html += formatCell(t, c++, alignSint, isFirst);
+                    html += formatCell(desc, c++, alignSint, isFirst);
+                    html += formatCell(unitCost, c++, alignSint, isFirst);
+                    html += formatCell(s.qty, c++, alignSint, isFirst);
+                    html += formatCell(formattatoreValuta(s.totale), c++, alignSint, isFirst);
+                    html += `</tr>`;
+                    rowIdxSint++;
                 }
             });
-            html += `<tr><td colspan="4" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td><strong>${formattatoreValuta(vapDettaglioCorrente.totaleAssoluto)}</strong></td></tr>
+            let strTotale = String(formattatoreValuta(vapDettaglioCorrente.totaleAssoluto));
+            if (strTotale.includes('€')) {
+                strTotale = '€ ' + strTotale.replace(/€/g, '').trim();
+            }
+            html += `<tr><td colspan="4" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td style="text-align:right;"><strong>${strTotale}</strong></td></tr>
                     </tbody>
                 </table>
                 
@@ -1932,15 +2054,19 @@
                     </thead>
                     <tbody>`;
             
-            vapDettaglioCorrente.rows.forEach(r => {
+            let alignDett = [];
+            vapDettaglioCorrente.rows.forEach((r, rowIdx) => {
                 html += `<tr>`;
-                selectedCols.forEach(c => {
-                    if (c === 'Value €') {
-                        html += `<td><strong>${formattatoreValuta(r['Value €'])}</strong></td>`;
-                    } else if (tows.includes(c)) {
-                        html += `<td>${r[c]||'0'}</td>`;
+                const isFirst = rowIdx === 0;
+                let c = 0;
+                selectedCols.forEach(colName => {
+                    let val = r[colName] || '';
+                    if (colName === 'Value €') {
+                        html += formatCell(formattatoreValuta(r['Value €']), c++, alignDett, isFirst, true);
+                    } else if (tows.includes(colName)) {
+                        html += formatCell(r[colName]||'0', c++, alignDett, isFirst);
                     } else {
-                        html += `<td>${r[c]||''}</td>`;
+                        html += formatCell(val, c++, alignDett, isFirst);
                     }
                 });
                 html += `</tr>`;

@@ -1707,7 +1707,7 @@
         /* --- VAP LOGIC --- */
         let vapDettaglioCorrente = null;
 
-                function initVapDettaglioUI() {
+                                function initVapDettaglioUI() {
             if (!document.getElementById('vap-dettaglio-quadro')) {
                 const s = document.createElement('script');
                 s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
@@ -1735,6 +1735,7 @@
                             <input type="file" id="vap-file-excel" accept=".xlsx, .xls, .csv">
                         </div>
                         <button class="btn btn-outline" onclick="elaboraDatiVap()">Elabora Dati</button>
+                        <button class="btn btn-outline" style="border-color: #d93025; color: #d93025;" onclick="resetDatiVap()">Reset Dati</button>
                     </div>
                     <div id="vap-tabelle-risultato"></div>
                 `;
@@ -1748,6 +1749,14 @@
             document.getElementById('vap-tabelle-risultato').innerHTML = '';
             vapDettaglioCorrente = null;
         }
+
+        window.resetDatiVap = function() {
+            document.getElementById('vap-file-json').value = '';
+            document.getElementById('vap-file-excel').value = '';
+            document.getElementById('vap-tabelle-risultato').innerHTML = '';
+            document.getElementById('vap-valore').value = '';
+            vapDettaglioCorrente = null;
+        };
 
         window.elaboraDatiVap = function() {
             const fJson = document.getElementById('vap-file-json').files[0];
@@ -1793,7 +1802,7 @@
             readerJson.readAsText(fJson);
         };
 
-        function renderTabelleVap() {
+                function renderTabelleVap() {
             if(!vapDettaglioCorrente) return;
             const tows = Object.keys(vapDettaglioCorrente.summary);
             
@@ -1823,12 +1832,17 @@
             });
             h += '</table></div>';
 
-            h += '<h5 style="margin-top:1.5rem;">Riepilogo Totali TOW</h5><table class="vap-t" style="margin-top:0.5rem; max-width: 500px;"><tr><th style="background:var(--brand-blue); color:#fff;">TOW</th><th style="background:var(--brand-blue); color:#fff;">Quantità Totale</th><th style="background:var(--brand-blue); color:#fff;">Valore Totale</th></tr>';
+            h += '<h5 style="margin-top:1.5rem;">Dati di sintesi VAP</h5><table class="vap-t" style="margin-top:0.5rem; max-width: 800px;"><tr><th style="background:var(--brand-blue); color:#fff;">TOW</th><th style="background:var(--brand-blue); color:#fff;">Descrizione</th><th style="background:var(--brand-blue); color:#fff;">Costo Unitario</th><th style="background:var(--brand-blue); color:#fff;">Quantità Totale</th><th style="background:var(--brand-blue); color:#fff;">Valore Totale</th></tr>';
             tows.forEach(t => {
                 let s = vapDettaglioCorrente.summary[t];
-                if(s.qty > 0) h += `<tr><td>${t}</td><td>${s.qty}</td><td>${formattatoreValuta(s.totale)}</td></tr>`;
+                if(s.qty > 0) {
+                    let listinoItem = (vapDettaglioCorrente.listinoItems || []).find(i => i.tow === t) || {};
+                    let desc = listinoItem.description || listinoItem.descrizione || '';
+                    let unitCost = listinoItem.unit_cost || '';
+                    h += `<tr><td>${t}</td><td>${desc}</td><td>${unitCost}</td><td>${s.qty}</td><td>${formattatoreValuta(s.totale)}</td></tr>`;
+                }
             });
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td><strong style="font-size: 1.1em;">${formattatoreValuta(vapDettaglioCorrente.totaleAssoluto)}</strong></td></tr></table>`;
+            h += `<tr><td colspan="4" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td><strong style="font-size: 1.1em;">${formattatoreValuta(vapDettaglioCorrente.totaleAssoluto)}</strong></td></tr></table>`;
             
             document.getElementById('vap-tabelle-risultato').innerHTML = h;
         }
@@ -1837,12 +1851,17 @@
             if(!vapDettaglioCorrente || !window.XLSX) return;
             const tows = Object.keys(vapDettaglioCorrente.summary);
             
-            let wsSintesiData = [ ["TOW", "Quantità Totale", "Valore Totale (€)"] ];
+            let wsSintesiData = [ ["TOW", "Descrizione", "Costo Unitario", "Quantità Totale", "Valore Totale (€)"] ];
             tows.forEach(t => {
                 let s = vapDettaglioCorrente.summary[t];
-                if(s.qty > 0) wsSintesiData.push([t, s.qty, s.totale]);
+                if(s.qty > 0) {
+                    let listinoItem = (vapDettaglioCorrente.listinoItems || []).find(i => i.tow === t) || {};
+                    let desc = listinoItem.description || listinoItem.descrizione || '';
+                    let unitCost = listinoItem.unit_cost || '';
+                    wsSintesiData.push([t, desc, unitCost, s.qty, s.totale]);
+                }
             });
-            wsSintesiData.push(["TOTALE ASSOLUTO", "", vapDettaglioCorrente.totaleAssoluto]);
+            wsSintesiData.push(["TOTALE ASSOLUTO", "", "", "", vapDettaglioCorrente.totaleAssoluto]);
             const wsSintesi = XLSX.utils.aoa_to_sheet(wsSintesiData);
 
             const wsDettaglio = XLSX.utils.json_to_sheet(vapDettaglioCorrente.rows);
@@ -1878,29 +1897,21 @@
                 </style>
             </head>
             <body>
-                <h1>Listino Costi</h1>
+                <h1>Dati di sintesi VAP</h1>
                 <table class="table" style="width: 80%;">
-                    <thead><tr><th>Numero TOW</th><th>Descrizione TOW</th><th>Costo Unitario</th></tr></thead>
-                    <tbody>`;
-            
-            if(vapDettaglioCorrente.listinoItems) {
-                vapDettaglioCorrente.listinoItems.forEach(item => {
-                    html += `<tr><td>${item.tow || ''}</td><td>${item.description || item.descrizione || ''}</td><td>${item.unit_cost || ''}</td></tr>`;
-                });
-            }
-
-            html += `</tbody></table>
-            
-                <h1>Dati di Sintesi VAP (Riepilogo TOW)</h1>
-                <table class="table" style="width: 50%;">
-                    <thead><tr><th>TOW</th><th>Quantità Totale</th><th>Valore Totale</th></tr></thead>
+                    <thead><tr><th>TOW</th><th>Descrizione</th><th>Costo Unitario</th><th>Quantità Totale</th><th>Valore Totale</th></tr></thead>
                     <tbody>`;
             
             tows.forEach(t => {
                 let s = vapDettaglioCorrente.summary[t];
-                if(s.qty > 0) html += `<tr><td>${t}</td><td>${s.qty}</td><td>${formattatoreValuta(s.totale)}</td></tr>`;
+                if(s.qty > 0) {
+                    let listinoItem = (vapDettaglioCorrente.listinoItems || []).find(i => i.tow === t) || {};
+                    let desc = listinoItem.description || listinoItem.descrizione || '';
+                    let unitCost = listinoItem.unit_cost || '';
+                    html += `<tr><td>${t}</td><td>${desc}</td><td>${unitCost}</td><td>${s.qty}</td><td>${formattatoreValuta(s.totale)}</td></tr>`;
+                }
             });
-            html += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td><strong>${formattatoreValuta(vapDettaglioCorrente.totaleAssoluto)}</strong></td></tr>
+            html += `<tr><td colspan="4" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td><strong>${formattatoreValuta(vapDettaglioCorrente.totaleAssoluto)}</strong></td></tr>
                     </tbody>
                 </table>
                 
@@ -1945,7 +1956,7 @@
             </body>
             </html>`;
 
-            let printWin = window.open('', '_blank');
+                        let printWin = window.open('', '_blank');
             printWin.document.open();
             printWin.document.write(html);
             printWin.document.close();

@@ -1783,7 +1783,7 @@
                             totaleAssoluto += valueRiga;
                         });
 
-                        vapDettaglioCorrente = { rows, summary, totaleAssoluto };
+                        vapDettaglioCorrente = { rows, summary, totaleAssoluto, listinoItems: listino.items };
                         renderTabelleVap();
                         document.getElementById('vap-valore').value = String(totaleAssoluto.toFixed(2)).replace('.', ',');
                     };
@@ -1803,7 +1803,14 @@
                 <button class="btn btn-small" style="background-color: #217346; color: white;" onclick="esportaVapExcel()">📊 Esporta Excel</button>
             </div>`;
 
-            let h = btnHtml + '<h5>Dettaglio Completo Attività</h5><div class="vap-t-wrapper"><table class="vap-t">';
+            const allCols = ['#', 'Attività', 'Data Richiesta', 'Data Delivery', ...tows, 'Value €', 'Note', 'Buono di Consegna', 'Riferimento Fattura', 'Data Fattura'];
+            let colsHtml = '<div style="margin-bottom: 15px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 6px;"><strong style="font-size: 0.85rem; display: block; margin-bottom: 5px;">Colonne da includere nel PDF:</strong><div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.8rem;">';
+            allCols.forEach(c => {
+                colsHtml += `<label><input type="checkbox" class="pdf-col-cb" value="${c}" checked> ${c}</label>`;
+            });
+            colsHtml += '</div></div>';
+
+            let h = btnHtml + colsHtml + '<h5>Dettaglio Completo Attività</h5><div class="vap-t-wrapper"><table class="vap-t">';
             h += '<tr><th>#</th><th>Attività</th><th>Data Richiesta</th><th>Data Delivery</th>';
             tows.forEach(t => h += `<th>${t}</th>`);
             h += '<th>Value €</th><th>Note</th><th>Buono Cons.</th><th>Rif. Fattura</th><th>Data Fattura</th></tr>';
@@ -1851,6 +1858,9 @@
             if(!vapDettaglioCorrente) return;
             const tows = Object.keys(vapDettaglioCorrente.summary);
             
+            const checkboxes = document.querySelectorAll('.pdf-col-cb');
+            const selectedCols = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+
             let html = `<!DOCTYPE html>
             <html lang="it">
             <head>
@@ -1868,6 +1878,19 @@
                 </style>
             </head>
             <body>
+                <h1>Listino Costi</h1>
+                <table class="table" style="width: 80%;">
+                    <thead><tr><th>Numero TOW</th><th>Descrizione TOW</th><th>Costo Unitario</th></tr></thead>
+                    <tbody>`;
+            
+            if(vapDettaglioCorrente.listinoItems) {
+                vapDettaglioCorrente.listinoItems.forEach(item => {
+                    html += `<tr><td>${item.tow || ''}</td><td>${item.description || item.descrizione || ''}</td><td>${item.unit_cost || ''}</td></tr>`;
+                });
+            }
+
+            html += `</tbody></table>
+            
                 <h1>Dati di Sintesi VAP (Riepilogo TOW)</h1>
                 <table class="table" style="width: 50%;">
                     <thead><tr><th>TOW</th><th>Quantità Totale</th><th>Valore Totale</th></tr></thead>
@@ -1886,18 +1909,30 @@
                 <h1>Dati di Dettaglio Attività VAP</h1>
                 <table class="table">
                     <thead>
-                        <tr><th>#</th><th>Attività</th><th>Data Richiesta</th><th>Data Delivery</th>`;
-            tows.forEach(t => html += `<th>${t}</th>`);
-            html += `<th>Value €</th><th>Note</th><th>Buono Cons.</th><th>Rif. Fattura</th><th>Data Fattura</th></tr>
+                        <tr>`;
+            
+            selectedCols.forEach(c => {
+                if (c === 'Buono di Consegna') html += `<th>Buono Cons.</th>`;
+                else if (c === 'Riferimento Fattura') html += `<th>Rif. Fattura</th>`;
+                else html += `<th>${c}</th>`;
+            });
+
+            html += `</tr>
                     </thead>
                     <tbody>`;
             
             vapDettaglioCorrente.rows.forEach(r => {
-                html += `<tr>
-                    <td>${r['#']||''}</td><td>${r['Attività']||''}</td><td>${r['Data Richiesta']||''}</td><td>${r['Data Delivery']||''}</td>`;
-                tows.forEach(t => html += `<td>${r[t]||'0'}</td>`);
-                html += `<td><strong>${formattatoreValuta(r['Value €'])}</strong></td><td>${r['Note']||''}</td><td>${r['Buono di Consegna']||''}</td><td>${r['Riferimento Fattura']||''}</td><td>${r['Data Fattura']||''}</td>
-                </tr>`;
+                html += `<tr>`;
+                selectedCols.forEach(c => {
+                    if (c === 'Value €') {
+                        html += `<td><strong>${formattatoreValuta(r['Value €'])}</strong></td>`;
+                    } else if (tows.includes(c)) {
+                        html += `<td>${r[c]||'0'}</td>`;
+                    } else {
+                        html += `<td>${r[c]||''}</td>`;
+                    }
+                });
+                html += `</tr>`;
             });
 
             html += `</tbody></table>

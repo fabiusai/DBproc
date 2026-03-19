@@ -1707,7 +1707,7 @@
         /* --- VAP LOGIC --- */
         let vapDettaglioCorrente = null;
 
-        function initVapDettaglioUI() {
+                function initVapDettaglioUI() {
             if (!document.getElementById('vap-dettaglio-quadro')) {
                 const s = document.createElement('script');
                 s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
@@ -1740,7 +1740,8 @@
                 `;
                 const modalGrid = document.querySelector('#modal-vap .form-grid');
                 modalGrid.parentElement.insertBefore(div, modalGrid.nextElementSibling.nextElementSibling);
-                document.querySelector('#modal-vap .modal-content').style.maxWidth = "1000px";
+                // Ampliamento modale per schermi grandi
+                document.querySelector('#modal-vap .modal-content').style.maxWidth = "95vw";
             }
             document.getElementById('vap-file-json').value = '';
             document.getElementById('vap-file-excel').value = '';
@@ -1796,7 +1797,13 @@
             if(!vapDettaglioCorrente) return;
             const tows = Object.keys(vapDettaglioCorrente.summary);
             
-            let h = '<h5>Dettaglio Completo Attività</h5><div class="vap-t-wrapper"><table class="vap-t">';
+            let btnHtml = `
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 10px;">
+                <button class="btn btn-small btn-yellow" onclick="esportaVapPdf()">📄 Esporta PDF</button>
+                <button class="btn btn-small" style="background-color: #217346; color: white;" onclick="esportaVapExcel()">📊 Esporta Excel</button>
+            </div>`;
+
+            let h = btnHtml + '<h5>Dettaglio Completo Attività</h5><div class="vap-t-wrapper"><table class="vap-t">';
             h += '<tr><th>#</th><th>Attività</th><th>Data Richiesta</th><th>Data Delivery</th>';
             tows.forEach(t => h += `<th>${t}</th>`);
             h += '<th>Value €</th><th>Note</th><th>Buono Cons.</th><th>Rif. Fattura</th><th>Data Fattura</th></tr>';
@@ -1818,6 +1825,96 @@
             
             document.getElementById('vap-tabelle-risultato').innerHTML = h;
         }
+
+        window.esportaVapExcel = function() {
+            if(!vapDettaglioCorrente || !window.XLSX) return;
+            const tows = Object.keys(vapDettaglioCorrente.summary);
+            
+            let wsSintesiData = [ ["TOW", "Quantità Totale", "Valore Totale (€)"] ];
+            tows.forEach(t => {
+                let s = vapDettaglioCorrente.summary[t];
+                if(s.qty > 0) wsSintesiData.push([t, s.qty, s.totale]);
+            });
+            wsSintesiData.push(["TOTALE ASSOLUTO", "", vapDettaglioCorrente.totaleAssoluto]);
+            const wsSintesi = XLSX.utils.aoa_to_sheet(wsSintesiData);
+
+            const wsDettaglio = XLSX.utils.json_to_sheet(vapDettaglioCorrente.rows);
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, wsSintesi, "Dati di Sintesi");
+            XLSX.utils.book_append_sheet(wb, wsDettaglio, "Dati di Dettaglio");
+            
+            XLSX.writeFile(wb, "Dettaglio_VAP.xlsx");
+        };
+
+        window.esportaVapPdf = function() {
+            if(!vapDettaglioCorrente) return;
+            const tows = Object.keys(vapDettaglioCorrente.summary);
+            
+            let html = `<!DOCTYPE html>
+            <html lang="it">
+            <head>
+                <meta charset="UTF-8">
+                <title>Report Dettaglio VAP</title>
+                <style>
+                    @page { size: A4 landscape; margin: 15mm; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 10px; }
+                    h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin-bottom: 15px; font-size: 18px; }
+                    .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    .table th, .table td { border: 1px solid #d2d2d7; padding: 6px; text-align: left; vertical-align: middle; }
+                    .table th { background-color: #0146bc; color: white; }
+                    .table tr:nth-child(even) { background-color: #f9f9f9; }
+                    .page-break { page-break-before: always; }
+                </style>
+            </head>
+            <body>
+                <h1>Dati di Sintesi VAP (Riepilogo TOW)</h1>
+                <table class="table" style="width: 50%;">
+                    <thead><tr><th>TOW</th><th>Quantità Totale</th><th>Valore Totale</th></tr></thead>
+                    <tbody>`;
+            
+            tows.forEach(t => {
+                let s = vapDettaglioCorrente.summary[t];
+                if(s.qty > 0) html += `<tr><td>${t}</td><td>${s.qty}</td><td>${formattatoreValuta(s.totale)}</td></tr>`;
+            });
+            html += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">TOTALE ASSOLUTO</td><td><strong>${formattatoreValuta(vapDettaglioCorrente.totaleAssoluto)}</strong></td></tr>
+                    </tbody>
+                </table>
+                
+                <div class="page-break"></div>
+                
+                <h1>Dati di Dettaglio Attività VAP</h1>
+                <table class="table">
+                    <thead>
+                        <tr><th>#</th><th>Attività</th><th>Data Richiesta</th><th>Data Delivery</th>`;
+            tows.forEach(t => html += `<th>${t}</th>`);
+            html += `<th>Value €</th><th>Note</th><th>Buono Cons.</th><th>Rif. Fattura</th><th>Data Fattura</th></tr>
+                    </thead>
+                    <tbody>`;
+            
+            vapDettaglioCorrente.rows.forEach(r => {
+                html += `<tr>
+                    <td>${r['#']||''}</td><td>${r['Attività']||''}</td><td>${r['Data Richiesta']||''}</td><td>${r['Data Delivery']||''}</td>`;
+                tows.forEach(t => html += `<td>${r[t]||'0'}</td>`);
+                html += `<td><strong>${formattatoreValuta(r['Value €'])}</strong></td><td>${r['Note']||''}</td><td>${r['Buono di Consegna']||''}</td><td>${r['Riferimento Fattura']||''}</td><td>${r['Data Fattura']||''}</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>
+                <script>
+                    window.onload = function() { 
+                        window.onafterprint = function() { window.close(); };
+                        setTimeout(function() { window.print(); }, 500);
+                    };
+                <\/script>
+            </body>
+            </html>`;
+
+            let printWin = window.open('', '_blank');
+            printWin.document.open();
+            printWin.document.write(html);
+            printWin.document.close();
+        };
 
         function predisponiVapNuovo(idOrdine, labelRda, tipoContratto) {
             initVapDettaglioUI();

@@ -1993,7 +1993,7 @@
                 <title>Report Dettaglio VAP</title>
                 <style>
                     @page { size: A4 landscape; margin: 0; }
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 10px; padding: 0 15mm 15mm 15mm; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 10px; padding: 0 15mm 0 15mm; }
                     h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin: 15mm 0 15px 0; font-size: 18px; }
                     .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                     .table th, .table td { border: 1px solid #d2d2d7; padding: 6px; text-align: left; vertical-align: middle; }
@@ -2001,6 +2001,7 @@
                     .table tr:nth-child(even) { background-color: #f9f9f9; }
                     .page-break { page-break-before: always; }
                     .spacer-row th { height: 10mm; border: none !important; background: white !important; padding: 0 !important; }
+                    .spacer-row-bottom td { height: 15mm; border: none !important; background: white !important; padding: 0 !important; }
                 </style>
             </head>
             <body>
@@ -2010,6 +2011,9 @@
                         <tr class="spacer-row"><th colspan="5"></th></tr>
                         <tr><th>TOW</th><th>Descrizione</th><th>Costo Unitario</th><th>Quantità Totale</th><th>Valore Totale</th></tr>
                     </thead>
+                    <tfoot>
+                        <tr class="spacer-row-bottom"><td colspan="5"></td></tr>
+                    </tfoot>
                     <tbody>`;
             
             let alignSint = [];

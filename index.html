@@ -1835,7 +1835,7 @@
                 return `<td style="text-align:${align};">${content}</td>`;
             };
 
-            let h = btnHtml + colsHtml + '<h5>Dettaglio Completo Attività</h5><div class="vap-t-wrapper"><table class="vap-t">';
+            let h = btnHtml + colsHtml + '<h5>Dettaglio consuntivazione</h5><div class="vap-t-wrapper"><table class="vap-t">';
             h += '<tr><th style="text-align:center;">#</th><th style="text-align:center;">Attività</th><th style="text-align:center;">Data Richiesta</th><th style="text-align:center;">Data Delivery</th>';
             tows.forEach(t => h += `<th style="text-align:center;">${t}</th>`);
             h += '<th style="text-align:center;">Value €</th><th style="text-align:center;">Note</th><th style="text-align:center;">Buono Cons.</th><th style="text-align:center;">Rif. Fattura</th><th style="text-align:center;">Data Fattura</th></tr>';
@@ -1859,7 +1859,7 @@
             });
             h += '</table></div>';
 
-            h += '<h5 style="margin-top:1.5rem;">Dati di sintesi VAP</h5><table class="vap-t" style="margin-top:0.5rem; max-width: 800px;"><tr><th style="background:var(--brand-blue); color:#fff; text-align:center;">TOW</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Descrizione</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Costo Unitario</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Quantità Totale</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Valore Totale</th></tr>';
+            h += '<h5 style="margin-top:1.5rem;">Sintesi consuntivazione</h5><table class="vap-t" style="margin-top:0.5rem; max-width: 800px;"><tr><th style="background:var(--brand-blue); color:#fff; text-align:center;">TOW</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Descrizione</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Costo Unitario</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Quantità Totale</th><th style="background:var(--brand-blue); color:#fff; text-align:center;">Valore Totale</th></tr>';
             
             let alignSint = [];
             let rowIdxSint = 0;
@@ -1957,8 +1957,8 @@
             applyAlignments(wsDettaglio);
 
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, wsSintesi, "Dati di Sintesi");
-            XLSX.utils.book_append_sheet(wb, wsDettaglio, "Dati di Dettaglio");
+            XLSX.utils.book_append_sheet(wb, wsSintesi, "Sintesi consuntivazione");
+            XLSX.utils.book_append_sheet(wb, wsDettaglio, "Dettaglio consuntivazione");
             
             XLSX.writeFile(wb, "Dettaglio_VAP.xlsx");
         };
@@ -1992,8 +1992,8 @@
                 <meta charset="UTF-8">
                 <title>Report Dettaglio VAP</title>
                 <style>
-                    @page { size: A4 landscape; margin: 15mm; }
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 10px; }
+                    @page { size: A4 landscape; margin: 0; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 10px; padding: 15mm; }
                     h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin-bottom: 15px; font-size: 18px; }
                     .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                     .table th, .table td { border: 1px solid #d2d2d7; padding: 6px; text-align: left; vertical-align: middle; }
@@ -2003,7 +2003,7 @@
                 </style>
             </head>
             <body>
-                <h1>Dati di sintesi VAP</h1>
+                <h1>Sintesi consuntivazione</h1>
                 <table class="table" style="width: 80%;">
                     <thead><tr><th>TOW</th><th>Descrizione</th><th>Costo Unitario</th><th>Quantità Totale</th><th>Valore Totale</th></tr></thead>
                     <tbody>`;
@@ -2039,7 +2039,7 @@
                 
                 <div class="page-break"></div>
                 
-                <h1>Dati di Dettaglio Attività VAP</h1>
+                <h1>Dettaglio consuntivazione</h1>
                 <table class="table">
                     <thead>
                         <tr>`;

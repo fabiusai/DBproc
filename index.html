@@ -965,13 +965,29 @@
                     </div>
                     <div class="card-actions">
                         <span class="valore">${formattatoreValuta(c.valore)}</span>
-                        <div style="margin-top:8px;">
+                        <div style="margin-top:8px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                            <button class="btn-icon btn-icon-danger" style="margin:0; padding: 0.35rem 0.5rem;" onclick="eliminaContratto('${c.id}')" title="Elimina Contratto">🗑️</button>
                             <button class="btn btn-outline btn-small" onclick="caricaContrattoPerModifica('${c.id}')">✏️ Modifica</button>
                             <button class="btn btn-small" onclick="apriDettaglioContratto('${c.id}')">Gestisci Spese →</button>
                         </div>
                     </div>`;
                 container.appendChild(card);
             });
+        }
+
+        function eliminaContratto(id) {
+            if(confirm("Sei sicuro di voler eliminare questo contratto? Verranno eliminati anche tutti gli ordini (RDA/ODA) e i pagamenti (VAP) collegati.")) {
+                appData.contratti = appData.contratti.filter(c => c.id !== id);
+                
+                const ordiniDaEliminare = appData.ordini.filter(o => o.idContratto === id).map(o => o.id);
+                appData.ordini = appData.ordini.filter(o => o.idContratto !== id);
+                appData.vap = appData.vap.filter(v => !ordiniDaEliminare.includes(v.idOrdine));
+                
+                salvaDati(); 
+                renderDashboard();
+                if(document.getElementById('tab-attivi').classList.contains('active-segment')) renderContrattiAttivi();
+                if(document.getElementById('tab-budget').classList.contains('active-segment')) renderBudgetAnnuale();
+            }
         }
 
         /* --- CONTRATTI LOGIC --- */

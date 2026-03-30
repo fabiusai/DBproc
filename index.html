@@ -647,6 +647,8 @@
 
             const filtri = getFiltriAttivi();
             const oggi = new Date().toISOString().split('T')[0];
+            const annoCorrente = new Date().getFullYear().toString();
+            const dataLimite = (filtri.anno.toString() === annoCorrente) ? oggi : `${filtri.anno}-12-31`;
             
             let attivi = appData.contratti.filter(c => {
                 if (filtri.tipo === 'stipulati') {
@@ -656,7 +658,11 @@
                 }
             }).map(c => {
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
-                const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
+                const speso = appData.vap.filter(v => {
+                    if (!ordiniC.some(o => o.id === v.idOrdine)) return false;
+                    const dataVap = v.data || (v.anno ? `${v.anno}-12-31` : '9999-12-31');
+                    return dataVap <= dataLimite;
+                }).reduce((acc, v) => acc + v.valore, 0);
                 return { ...c, speso, residuo: (c.valore || 0) - speso };
             });
 
@@ -675,7 +681,8 @@
             const thStyle = "padding:10px; cursor:pointer; user-select:none; transition: color 0.2s;";
             const getIcon = (col) => sortBy === col ? (sortAsc ? ' <small>▲</small>' : ' <small>▼</small>') : '';
             
-            let html = '<div style="margin-bottom: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem;">';
+            let html = '<div style="margin-bottom: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem; align-items: center;">';
+            html += '<span style="font-size: 0.8rem; color: var(--text-muted); margin-right: auto;">* Il totale speso è calcolato da inizio contratto fino al ' + (filtri.anno.toString() === annoCorrente ? 'giorno corrente' : '31/12/'+filtri.anno) + '</span>';
             html += '<button class="btn btn-yellow btn-small" onclick="esportaPdfContrattiAttivi()">📄 Esporta PDF</button>';
             html += '<button class="btn btn-small" style="background-color: #217346; color: white;" onclick="esportaExcelContrattiAttivi()">📊 Esporta Excel</button>';
             html += '</div>';
@@ -722,6 +729,11 @@
 
         function esportaPdfContrattiAttivi() {
             const filtri = getFiltriAttivi();
+            const oggi = new Date().toISOString().split('T')[0];
+            const annoCorrente = new Date().getFullYear().toString();
+            const dataLimite = (filtri.anno.toString() === annoCorrente) ? oggi : `${filtri.anno}-12-31`;
+            const dataLimiteTesto = filtri.anno.toString() === annoCorrente ? 'giorno corrente' : '31/12/'+filtri.anno;
+
             const attivi = appData.contratti.filter(c => {
                 if (filtri.tipo === 'stipulati') return c.dataInizio >= filtri.inizioAnno && c.dataInizio <= filtri.fineAnno;
                 else return c.dataInizio <= filtri.fineAnno && c.dataFine >= filtri.inizioAnno;
@@ -736,7 +748,8 @@
                     @page { size: A4 landscape; margin: 15mm; }
                     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 12px; }
                     h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin-bottom: 5px; font-size: 20px; }
-                    h2 { font-size: 14px; color: #666; font-weight: normal; margin-top: 0; margin-bottom: 20px; }
+                    h2 { font-size: 14px; color: #666; font-weight: normal; margin-top: 0; margin-bottom: 5px; }
+                    p.nota { font-size: 11px; font-style: italic; color: #666; margin-top: 0; margin-bottom: 20px; }
                     .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                     .table th, .table td { border: 1px solid #d2d2d7; padding: 8px; text-align: left; vertical-align: middle; }
                     .table th { background-color: #0146bc; color: white; }
@@ -746,6 +759,7 @@
             <body>
                 <h1>Report Contratti</h1>
                 <h2>${filtri.titolo} (Esportato il ${new Date().toLocaleDateString('it-IT')})</h2>
+                <p class="nota">* Il totale speso è calcolato da inizio contratto fino al ${dataLimiteTesto}</p>
                 <table class="table">
                     <thead>
                         <tr>
@@ -761,7 +775,11 @@
 
             attivi.forEach(c => {
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
-                const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
+                const speso = appData.vap.filter(v => {
+                    if (!ordiniC.some(o => o.id === v.idOrdine)) return false;
+                    const dataVap = v.data || (v.anno ? `${v.anno}-12-31` : '9999-12-31');
+                    return dataVap <= dataLimite;
+                }).reduce((acc, v) => acc + v.valore, 0);
                 const isProrogato = (c.proroghe && c.proroghe.length > 0) ? `<span style="color:#0146bc; font-size:10px;">[PROROGATO]</span>` : '';
                 
                 let dettaglioQuotePdf = '';

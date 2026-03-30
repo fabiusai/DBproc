@@ -660,6 +660,7 @@
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
                 const speso = appData.vap.filter(v => {
                     if (!ordiniC.some(o => o.id === v.idOrdine)) return false;
+                    if (v.assestamento && v.anno) return parseInt(v.anno) <= parseInt(filtri.anno);
                     const dataVap = v.data || (v.anno ? `${v.anno}-12-31` : '9999-12-31');
                     return dataVap <= dataLimite;
                 }).reduce((acc, v) => acc + v.valore, 0);
@@ -777,6 +778,7 @@
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
                 const speso = appData.vap.filter(v => {
                     if (!ordiniC.some(o => o.id === v.idOrdine)) return false;
+                    if (v.assestamento && v.anno) return parseInt(v.anno) <= parseInt(filtri.anno);
                     const dataVap = v.data || (v.anno ? `${v.anno}-12-31` : '9999-12-31');
                     return dataVap <= dataLimite;
                 }).reduce((acc, v) => acc + v.valore, 0);
@@ -824,12 +826,21 @@
 
         function esportaExcelContrattiAttivi() {
             const filtri = getFiltriAttivi();
+            const oggi = new Date().toISOString().split('T')[0];
+            const annoCorrente = new Date().getFullYear().toString();
+            const dataLimite = (filtri.anno.toString() === annoCorrente) ? oggi : `${filtri.anno}-12-31`;
+
             let attivi = appData.contratti.filter(c => {
                 if (filtri.tipo === 'stipulati') return c.dataInizio >= filtri.inizioAnno && c.dataInizio <= filtri.fineAnno;
                 else return c.dataInizio <= filtri.fineAnno && c.dataFine >= filtri.inizioAnno;
             }).map(c => {
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
-                const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
+                const speso = appData.vap.filter(v => {
+                    if (!ordiniC.some(o => o.id === v.idOrdine)) return false;
+                    if (v.assestamento && v.anno) return parseInt(v.anno) <= parseInt(filtri.anno);
+                    const dataVap = v.data || (v.anno ? `${v.anno}-12-31` : '9999-12-31');
+                    return dataVap <= dataLimite;
+                }).reduce((acc, v) => acc + v.valore, 0);
                 return { ...c, speso, residuo: (c.valore || 0) - speso };
             });
 

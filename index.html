@@ -660,7 +660,10 @@
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
                 const speso = appData.vap.filter(v => {
                     if (!ordiniC.some(o => o.id === v.idOrdine)) return false;
-                    if (v.assestamento && v.anno) return parseInt(v.anno) <= parseInt(filtri.anno);
+                    if (v.assestamento) {
+                        const annoRif = v.anno ? parseInt(v.anno) : (v.data ? parseInt(v.data.substring(0, 4)) - 1 : parseInt(filtri.anno));
+                        return annoRif <= parseInt(filtri.anno);
+                    }
                     const dataVap = v.data || (v.anno ? `${v.anno}-12-31` : '9999-12-31');
                     return dataVap <= dataLimite;
                 }).reduce((acc, v) => acc + v.valore, 0);
@@ -683,7 +686,7 @@
             const getIcon = (col) => sortBy === col ? (sortAsc ? ' <small>▲</small>' : ' <small>▼</small>') : '';
             
             let html = '<div style="margin-bottom: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem; align-items: center;">';
-            html += '<span style="font-size: 0.8rem; color: var(--text-muted); margin-right: auto;">* Il totale speso è calcolato da inizio contratto fino al ' + (filtri.anno.toString() === annoCorrente ? 'giorno corrente' : '31/12/'+filtri.anno) + '</span>';
+            html += '<span style="font-size: 0.8rem; color: var(--text-muted); margin-right: auto;">* Il totale speso è calcolato da inizio contratto fino al ' + (filtri.anno.toString() === annoCorrente ? 'giorno corrente' : '31/12/'+filtri.anno) + ' e considerando successivi vap in assestamento</span>';
             html += '<button class="btn btn-yellow btn-small" onclick="esportaPdfContrattiAttivi()">📄 Esporta PDF</button>';
             html += '<button class="btn btn-small" style="background-color: #217346; color: white;" onclick="esportaExcelContrattiAttivi()">📊 Esporta Excel</button>';
             html += '</div>';

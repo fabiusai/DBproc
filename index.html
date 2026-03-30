@@ -614,13 +614,47 @@
             }
         }
 
+                function getFiltriAttivi() {
+            const annoInput = document.getElementById('filtro-anno-attivi');
+            const tipoInput = document.getElementById('filtro-tipo-attivi');
+            const anno = annoInput ? annoInput.value : new Date().getFullYear();
+            const tipo = tipoInput ? tipoInput.value : 'in_corso';
+            const inizioAnno = `${anno}-01-01`;
+            const fineAnno = `${anno}-12-31`;
+            let titolo = tipo === 'stipulati' ? `Contratti stipulati nell'anno ${anno}` : `Contratti in corso di validità nell'anno ${anno}`;
+            return { anno, tipo, inizioAnno, fineAnno, titolo };
+        }
+
         function renderContrattiAttivi(sortBy = window.attiviSortBy || 'dataFine', sortAsc = window.attiviSortAsc !== undefined ? window.attiviSortAsc : true) {
             window.attiviSortBy = sortBy;
             window.attiviSortAsc = sortAsc;
             const container = document.getElementById('lista-contratti-attivi');
+            const header = document.querySelector('#dash-attivi .box-header');
+            
+            if (!document.getElementById('filtro-anno-attivi')) {
+                header.innerHTML = `
+                    <div style="flex:1;"><h3>Contratti Attivi / Storico</h3><p>Visualizzazione filtrata per anno e validità.</p></div>
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
+                        <label style="font-size:0.9rem; font-weight:600;">Anno:</label>
+                        <input type="number" id="filtro-anno-attivi" value="${new Date().getFullYear()}" style="width:80px; padding:0.4rem; border-radius:4px; border:1px solid var(--border-color);" onchange="renderContrattiAttivi()">
+                        <select id="filtro-tipo-attivi" style="padding:0.4rem; border-radius:4px; border:1px solid var(--border-color);" onchange="renderContrattiAttivi()">
+                            <option value="in_corso">In corso di validità</option>
+                            <option value="stipulati">Stipulati nell'anno</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            const filtri = getFiltriAttivi();
             const oggi = new Date().toISOString().split('T')[0];
             
-            let attivi = appData.contratti.filter(c => c.dataFine >= oggi).map(c => {
+            let attivi = appData.contratti.filter(c => {
+                if (filtri.tipo === 'stipulati') {
+                    return c.dataInizio >= filtri.inizioAnno && c.dataInizio <= filtri.fineAnno;
+                } else {
+                    return c.dataInizio <= filtri.fineAnno && c.dataFine >= filtri.inizioAnno;
+                }
+            }).map(c => {
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
                 const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
                 return { ...c, speso, residuo: (c.valore || 0) - speso };
@@ -636,7 +670,7 @@
                 return 0;
             });
 
-            if(attivi.length === 0) { container.innerHTML = '<div class="empty-state">Nessun contratto attivo alla data odierna.</div>'; return; }
+            if(attivi.length === 0) { container.innerHTML = `<div class="empty-state">Nessun contratto trovato per i criteri selezionati (${filtri.titolo}).</div>`; return; }
             
             const thStyle = "padding:10px; cursor:pointer; user-select:none; transition: color 0.2s;";
             const getIcon = (col) => sortBy === col ? (sortAsc ? ' <small>▲</small>' : ' <small>▼</small>') : '';
@@ -687,18 +721,22 @@
         }
 
         function esportaPdfContrattiAttivi() {
-            const oggi = new Date().toISOString().split('T')[0];
-            const attivi = appData.contratti.filter(c => c.dataFine >= oggi);
+            const filtri = getFiltriAttivi();
+            const attivi = appData.contratti.filter(c => {
+                if (filtri.tipo === 'stipulati') return c.dataInizio >= filtri.inizioAnno && c.dataInizio <= filtri.fineAnno;
+                else return c.dataInizio <= filtri.fineAnno && c.dataFine >= filtri.inizioAnno;
+            });
 
             let html = `<!DOCTYPE html>
             <html lang="it">
             <head>
                 <meta charset="UTF-8">
-                <title>Report Contratti Attivi</title>
+                <title>Report Contratti</title>
                 <style>
                     @page { size: A4 landscape; margin: 15mm; }
                     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.5; font-size: 12px; }
-                    h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin-bottom: 20px; font-size: 20px; }
+                    h1 { color: #0146bc; border-bottom: 2px solid #eddc01; padding-bottom: 5px; margin-bottom: 5px; font-size: 20px; }
+                    h2 { font-size: 14px; color: #666; font-weight: normal; margin-top: 0; margin-bottom: 20px; }
                     .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                     .table th, .table td { border: 1px solid #d2d2d7; padding: 8px; text-align: left; vertical-align: middle; }
                     .table th { background-color: #0146bc; color: white; }
@@ -706,7 +744,8 @@
                 </style>
             </head>
             <body>
-                <h1>Report Contratti Attivi (al ${new Date().toLocaleDateString('it-IT')})</h1>
+                <h1>Report Contratti</h1>
+                <h2>${filtri.titolo} (Esportato il ${new Date().toLocaleDateString('it-IT')})</h2>
                 <table class="table">
                     <thead>
                         <tr>
@@ -766,8 +805,11 @@
         }
 
         function esportaExcelContrattiAttivi() {
-            const oggi = new Date().toISOString().split('T')[0];
-            let attivi = appData.contratti.filter(c => c.dataFine >= oggi).map(c => {
+            const filtri = getFiltriAttivi();
+            let attivi = appData.contratti.filter(c => {
+                if (filtri.tipo === 'stipulati') return c.dataInizio >= filtri.inizioAnno && c.dataInizio <= filtri.fineAnno;
+                else return c.dataInizio <= filtri.fineAnno && c.dataFine >= filtri.inizioAnno;
+            }).map(c => {
                 const ordiniC = appData.ordini.filter(o => o.idContratto === c.id);
                 const speso = appData.vap.filter(v => ordiniC.some(o => o.id === v.idOrdine)).reduce((acc, v) => acc + v.valore, 0);
                 return { ...c, speso, residuo: (c.valore || 0) - speso };
@@ -810,7 +852,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `Contratti_Attivi_${oggi}.csv`;
+            a.download = `Contratti_${filtri.tipo}_${filtri.anno}.csv`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

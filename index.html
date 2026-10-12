@@ -1678,16 +1678,65 @@
             printWin.document.close();
         }
 
+        function residuoDisponibileRda(ordine) {
+            const totaleVap = appData.vap.filter(v => v.idOrdine === ordine.id).reduce((totale, v) => totale + v.valore, 0);
+            const residuo = ordine.valore - totaleVap;
+            return Math.abs(residuo) < 0.01 ? 0 : residuo;
+        }
+
         function renderOrdini(idContratto, tipoContratto) {
             const container = document.getElementById('lista-ordini'); container.innerHTML = '';
             const ordiniCtr = appData.ordini.filter(o => o.idContratto === idContratto);
-            if(ordiniCtr.length === 0) { container.innerHTML = `<div class="empty-state" style="padding:1rem;">Nessun ordine registrato.</div>`; return; }
+            if(ordiniCtr.length === 0) { document.getElementById('controlli-ordini')?.remove(); container.innerHTML = `<div class="empty-state" style="padding:1rem;">Nessun ordine registrato.</div>`; return; }
 
-            ordiniCtr.forEach(o => {
+            let ordiniVisibili = ordiniCtr;
+            if (tipoContratto === 'quadro') {
+                let controlli = document.getElementById('controlli-ordini');
+                if (!controlli) {
+                    controlli = document.createElement('div');
+                    controlli.id = 'controlli-ordini';
+                    controlli.style.cssText = 'display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; margin-bottom:1rem;';
+                    controlli.innerHTML = `
+                        <div style="flex:1; min-width:220px;">
+                            <label for="filtro-ordini-funzione">Funzione beneficiaria</label>
+                            <select id="filtro-ordini-funzione"><option value="">Tutte le funzioni</option></select>
+                        </div>
+                        <div style="flex:1; min-width:220px;">
+                            <label for="ordinamento-ordini-residuo">Ordina RDA</label>
+                            <select id="ordinamento-ordini-residuo">
+                                <option value="">Ordine di inserimento</option>
+                                <option value="asc">Residuo disponibile: crescente</option>
+                                <option value="desc">Residuo disponibile: decrescente</option>
+                            </select>
+                        </div>
+                        <span id="conteggio-ordini" role="status" style="color:var(--text-muted); font-size:0.9rem;"></span>`;
+                    container.before(controlli);
+                    controlli.querySelectorAll('select').forEach(select => {
+                        select.addEventListener('change', () => renderOrdini(idContratto, tipoContratto));
+                    });
+                }
+                const filtro = document.getElementById('filtro-ordini-funzione');
+                const funzioneSelezionata = filtro.value;
+                filtro.replaceChildren(new Option('Tutte le funzioni', ''));
+                const funzioni = [...new Set(ordiniCtr.map(o => o.funzione || ''))].sort((a, b) => a.localeCompare(b, 'it'));
+                funzioni.forEach(funzione => filtro.add(new Option(funzione || 'Funzione non indicata', funzione || '__non_indicata__')));
+                if ([...filtro.options].some(option => option.value === funzioneSelezionata)) filtro.value = funzioneSelezionata;
+                if (filtro.value) ordiniVisibili = ordiniCtr.filter(o => (o.funzione || '__non_indicata__') === filtro.value);
+                const ordinamento = document.getElementById('ordinamento-ordini-residuo').value;
+                if (ordinamento) {
+                    const residui = new Map(ordiniVisibili.map(o => [o.id, residuoDisponibileRda(o)]));
+                    ordiniVisibili = [...ordiniVisibili].sort((a, b) => ordinamento === 'asc' ? residui.get(a.id) - residui.get(b.id) : residui.get(b.id) - residui.get(a.id));
+                }
+                document.getElementById('conteggio-ordini').textContent = `${ordiniVisibili.length} di ${ordiniCtr.length} RDA`;
+                if (!ordiniVisibili.length) {
+                    container.innerHTML = `<div class="empty-state" style="padding:1rem;">Nessun ordine per la funzione beneficiaria selezionata.</div>`;
+                    return;
+                }
+            }
+
+            ordiniVisibili.forEach(o => {
                 const vaps = appData.vap.filter(v => v.idOrdine === o.id);
-                let totaleVap = 0; vaps.forEach(v => totaleVap += v.valore); 
-                let residuo = o.valore - totaleVap;
-                if (Math.abs(residuo) < 0.01) residuo = 0;
+                const residuo = residuoDisponibileRda(o);
                 const isMia = o.funzione === appData.config.miaFunzione;
 
                 let vapHtml = vaps.length === 0 ? `<p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Nessun VAP registrato.</p>` : vaps.map(v => {
